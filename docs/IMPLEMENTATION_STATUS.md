@@ -8,7 +8,7 @@ This file is active and should be kept current, but some referenced design docs 
 
 ## Current Snapshot
 
-Repository state is in setup phase. No application code exists yet.
+Repository state is still pre-implementation. The documentation scaffold is merged, and the project is now in the planning-refinement phase before architecture details and stack choices are locked.
 
 ## Completed
 
@@ -17,26 +17,39 @@ Repository state is in setup phase. No application code exists yet.
 - Confirmed challenge requirements from the upstream `README.md`
 - Established initial documentation structure for planning, design, and AI workflow
 - Established an AI usage diary structure for commit-oriented tracking
+- Refined `docs/PROJECT_PLAN.md` into the active execution plan
+- Established architecture and module working-log structures
+- Logged the current implementation boundary and major architecture assumptions
 
 ## In Progress
 
-- Defining the documentation baseline that will guide implementation
+- Refining the architecture baseline before writing stable architecture proposals
 - Keeping placeholder docs explicit so later sessions can distinguish draft structure from locked decisions
 
 ## Next Recommended Steps
 
-1. Refine the design boundary and module responsibilities.
-2. Define the quiz session domain model and real-time event contract.
-3. Choose the stack and project structure in the later planning stage.
-4. Scaffold the selected runtime after that decision is documented.
-5. Implement join flow before answer submission flow.
+1. Finalize the remaining risky architecture decisions.
+2. Refine `docs/ARCHITECTURE_PRINCIPLES.md`.
+3. Expand module placeholders enough to support architecture decisions.
+4. Define the quiz session domain model and real-time event contract.
+5. Choose the stack and project structure only after those design decisions are stable.
 6. Keep `docs/ai-usage/` updated as work lands in commits.
 
 ## Open Decisions
 
 - Exact runtime stack and library choice
+- Whether the implementation should stay with in-memory state or move to a proper database or shared-state layer
 - Whether to use raw WebSocket or Socket.IO for the demo implementation
 - Exact event names and payload schema
+- Leaderboard tie-break rule and any remaining score-order semantics
+
+## Recently Locked Decisions
+
+- Implement one core component: the real-time quiz session service
+- Keep reconnect in scope
+- Use server-issued participant identity and server-issued opaque reconnect token
+- Allow exactly one answer per participant per question
+- Reject subsequent answers server-side and prevent them in the client or demo UI
 
 ## Current Guidance
 
