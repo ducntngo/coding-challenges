@@ -19,6 +19,7 @@ Use module logs to capture:
 
 ## Relationship To Module Docs
 
+- `docs/modules/MODULE_DESIGN_PLAN.md` should track module sequence and current focus
 - `docs/modules/*.md` should hold the stable module view
 - `docs/modules/logs/` should hold working notes and design history
 - prefer combined session logs with multiple labeled decisions over one file per small decision
