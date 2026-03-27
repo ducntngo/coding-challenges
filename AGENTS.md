@@ -45,9 +45,11 @@ This file defines how AI assistants should work in this repository. It is the pr
 - Human or agent review is required for protocol design, state transitions, concurrency assumptions, and scoring correctness.
 - When AI suggestions are rejected, record the reason if it affected architecture or implementation direction.
 - For architecture work, present the reasoning and high-risk decision points to the user before locking them in.
+- For module design work, present the reasoning and high-risk module decisions to the user before locking them in.
 - Prioritize user decisions on choices that are hard to change, materially affect delivery risk, or have a high chance of causing failure if chosen poorly.
 - For lower-risk technical details, choose the best pragmatic option and document it.
 - Log each meaningful architecture decision in the relevant working log when it is made or revised.
+- Log each meaningful module decision in the relevant module working log when it is made or revised.
 - Add explicit tags such as `questionable` or `needs verification` when a decision or assumption is provisional, weakly supported, or still awaiting validation.
 
 ## AI Diary Requirement
@@ -79,6 +81,7 @@ This file defines how AI assistants should work in this repository. It is the pr
 - Use `docs/IMPLEMENTATION_STATUS.md` for current snapshot and handoff context.
 - Record architecture exploration and decisions in `docs/architecture/` so future sessions can recover context quickly.
 - Record explicit architecture tradeoffs in `docs/architecture/TRADEOFFS.md` and keep that file current as major choices are made or revised.
+- Use `docs/modules/MODULE_DESIGN_PLAN.md` to track module-design sequencing, status, and current focus.
 - Record module-specific exploration and decisions in `docs/modules/` and `docs/modules/logs/` as those areas mature.
 - Use module docs for stable design details and tradeoffs.
 - Preserve decision history clearly enough that later sessions can see what was considered, what was decided, and what still needs verification.

@@ -8,7 +8,7 @@ This file is active and should be kept current, but some referenced design docs 
 
 ## Current Snapshot
 
-Repository state is still pre-implementation. The documentation scaffold is merged, the stable architecture baseline is now defined, and the project is preparing to move from architecture into module design and protocol work.
+Repository state is still pre-implementation. The documentation scaffold is merged, the stable architecture baseline is defined, and the project is moving into module design and protocol work.
 
 ## Completed
 
@@ -22,16 +22,17 @@ Repository state is still pre-implementation. The documentation scaffold is merg
 - Logged the current implementation boundary and major architecture assumptions
 - Refined `docs/ARCHITECTURE_PRINCIPLES.md` into the stable architecture baseline
 - Added a canonical architecture tradeoffs doc and Mermaid architecture diagram
+- Established the module design plan and module working-log workflow
 
 ## In Progress
 
-- Preparing to move from stable architecture guidance into module-level design
-- Keeping placeholder module docs explicit until they are refined
+- Preparing to refine the first module doc: `quiz-session`
+- Keeping placeholder module docs explicit until each one is refined
 
 ## Next Recommended Steps
 
-1. Open and merge the architecture-baseline PR for this branch.
-2. Refine module docs using the stable architecture baseline and tradeoffs.
+1. Refine `docs/modules/quiz-session.md`.
+2. Log the resulting module decisions and open questions.
 3. Define the quiz session domain model and real-time event contract.
 4. Choose the stack and project structure only after module-contract work is stable.
 5. Keep `docs/ai-usage/` updated as work lands in commits.
@@ -70,6 +71,10 @@ Do not optimize around a specific language, framework, or transport yet. Those c
 - No tests yet
 - No runnable local setup yet
 - Module docs are still placeholders and need refinement
+
+## Current Module Focus
+
+- Active module target: `quiz-session`
 
 ## Handoff Notes
 

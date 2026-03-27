@@ -53,8 +53,8 @@ The immediate focus is still layer 1. The objective is to remove ambiguity befor
 | Stage | Status | Notes |
 | --- | --- | --- |
 | 0. Documentation and workflow setup | Completed | Governance docs, planning scaffold, AI diary rules, and repo workflow rules are in place. |
-| 1. Refine design boundary and execution plan | In progress | Lock solution scope, stage ordering, and the exact design questions that must be answered before implementation. |
-| 2. Define architecture and module contracts | Pending | Clarify component boundary, session model, scoring rules, event protocol, and operational assumptions. |
+| 1. Refine design boundary and execution plan | Completed | Solution scope, execution sequence, and design workflow are now explicit. |
+| 2. Define architecture and module contracts | In progress | Architecture baseline is defined; module contracts and domain/event details are next. |
 | 3. Select stack and scaffold project | Pending | Choose runtime, language, framework, and transport only after stage 2 is stable. |
 | 4. Implement participation flow | Pending | Connection lifecycle, join flow, session lookup or creation, and initial state broadcast. |
 | 5. Implement scoring and leaderboard flow | Pending | Answer handling, score changes, ranking, and live leaderboard updates. |
@@ -99,22 +99,21 @@ The immediate focus is still layer 1. The objective is to remove ambiguity befor
 
 ## Active Focus
 
-Current stage: `1. Refine design boundary and execution plan`
+Current stage: `2. Define architecture and module contracts`
 
 Immediate next outputs:
 
-- sharpen `docs/PROJECT_PLAN.md` into a concrete execution sequence
-- refine `docs/ARCHITECTURE_PRINCIPLES.md`
-- review the placeholder module docs and identify which decisions belong in stage 2
-- keep `docs/IMPLEMENTATION_STATUS.md` aligned with the current planning stage
+- expand module placeholders into stable module contracts
+- define the domain model and event protocol that connect the modules
+- keep `docs/IMPLEMENTATION_STATUS.md` aligned with the current design stage
+- begin with `docs/modules/quiz-session.md` as the first module design pass
 
 ## Current Next Steps
 
-1. Finalize this project plan as the source of truth for sequencing.
-2. Refine architecture principles so they express actual intended boundaries, not only placeholders.
-3. Expand module placeholders just enough to support stage 2 design decisions.
-4. Define the domain model and event protocol before choosing any stack.
-5. Choose the stack only after the above decisions are stable.
+1. Refine `docs/modules/quiz-session.md`.
+2. Refine the remaining module placeholders into stable module design docs.
+3. Define the domain model and event protocol before choosing any stack.
+4. Choose the stack only after the module contracts are stable.
 
 ## Cross-Cutting Documentation
 
@@ -123,6 +122,7 @@ The following docs should be updated throughout the project, not only at the end
 - `docs/IMPLEMENTATION_STATUS.md` for current state and handoff
 - `docs/ai-usage/` for commit-by-commit AI usage diary entries
 - `docs/architecture/` for architecture reasoning, assumptions, and decision history
+- `docs/modules/MODULE_DESIGN_PLAN.md` for module sequencing and current focus
 - `docs/modules/logs/` for module-level working records as module design deepens
 
 ## Risks To Control Early
