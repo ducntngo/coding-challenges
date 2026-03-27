@@ -72,9 +72,13 @@ This file defines how AI assistants should work in this repository. It is the pr
 - Use repository-relative paths in documentation; do not embed local machine-specific absolute paths.
 - Avoid duplicating the same decision in many places; link or reference the canonical document instead.
 - Use a stable-doc plus working-log pattern for evolving design areas.
+- Prefer combined session-oriented working logs plus canonical summary docs over creating one file for every minor decision.
+- Include explicit timestamps in working logs and decision records, using ISO 8601 with timezone when practical.
+- Prefer Mermaid for diagrams in markdown so they stay easy to edit and review in the repository.
 - Use `docs/PROJECT_PLAN.md` for roadmap and progress stages.
 - Use `docs/IMPLEMENTATION_STATUS.md` for current snapshot and handoff context.
 - Record architecture exploration and decisions in `docs/architecture/` so future sessions can recover context quickly.
+- Record explicit architecture tradeoffs in `docs/architecture/TRADEOFFS.md` and keep that file current as major choices are made or revised.
 - Record module-specific exploration and decisions in `docs/modules/` and `docs/modules/logs/` as those areas mature.
 - Use module docs for stable design details and tradeoffs.
 - Preserve decision history clearly enough that later sessions can see what was considered, what was decided, and what still needs verification.

@@ -45,6 +45,7 @@ This repository is for a coding challenge submission. Contributors, including AI
 - Markdown docs are first-class project artifacts.
 - Start each repository-authored markdown file with its own filename as the top heading.
 - Use repository-relative paths in documentation instead of local absolute paths.
+- Prefer Mermaid for diagrams in markdown so contributors can edit and review them in-repo.
 - Use concise sections with clear ownership of purpose.
 - Keep canonical information in one file and reference it elsewhere.
 - Record major tradeoffs, especially those relevant to the interview discussion.

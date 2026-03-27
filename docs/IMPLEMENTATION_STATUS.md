@@ -8,7 +8,7 @@ This file is active and should be kept current, but some referenced design docs 
 
 ## Current Snapshot
 
-Repository state is still pre-implementation. The documentation scaffold is merged, and the project is now in the planning-refinement phase before architecture details and stack choices are locked.
+Repository state is still pre-implementation. The documentation scaffold is merged, the stable architecture baseline is now defined, and the project is preparing to move from architecture into module design and protocol work.
 
 ## Completed
 
@@ -20,36 +20,45 @@ Repository state is still pre-implementation. The documentation scaffold is merg
 - Refined `docs/PROJECT_PLAN.md` into the active execution plan
 - Established architecture and module working-log structures
 - Logged the current implementation boundary and major architecture assumptions
+- Refined `docs/ARCHITECTURE_PRINCIPLES.md` into the stable architecture baseline
+- Added a canonical architecture tradeoffs doc and Mermaid architecture diagram
 
 ## In Progress
 
-- Refining the architecture baseline before writing stable architecture proposals
-- Keeping placeholder docs explicit so later sessions can distinguish draft structure from locked decisions
+- Preparing to move from stable architecture guidance into module-level design
+- Keeping placeholder module docs explicit until they are refined
 
 ## Next Recommended Steps
 
-1. Finalize the remaining risky architecture decisions.
-2. Refine `docs/ARCHITECTURE_PRINCIPLES.md`.
-3. Expand module placeholders enough to support architecture decisions.
-4. Define the quiz session domain model and real-time event contract.
-5. Choose the stack and project structure only after those design decisions are stable.
-6. Keep `docs/ai-usage/` updated as work lands in commits.
+1. Open and merge the architecture-baseline PR for this branch.
+2. Refine module docs using the stable architecture baseline and tradeoffs.
+3. Define the quiz session domain model and real-time event contract.
+4. Choose the stack and project structure only after module-contract work is stable.
+5. Keep `docs/ai-usage/` updated as work lands in commits.
 
 ## Open Decisions
 
 - Exact runtime stack and library choice
-- Whether the implementation should stay with in-memory state or move to a proper database or shared-state layer
 - Whether to use raw WebSocket or Socket.IO for the demo implementation
 - Exact event names and payload schema
-- Leaderboard tie-break rule and any remaining score-order semantics
+- Exact speed-based scoring formula
+- Exact scalable backing store choice for the future production path
 
 ## Recently Locked Decisions
 
 - Implement one core component: the real-time quiz session service
 - Keep reconnect in scope
 - Use server-issued participant identity and server-issued opaque reconnect token
+- Allow one active connection per participant, with latest connection winning on reconnect
 - Allow exactly one answer per participant per question
 - Reject subsequent answers server-side and prevent them in the client or demo UI
+- Incorrect answers score zero regardless of speed
+- Correct answers score positively, and faster correct answers score higher
+- Speed is measured from server broadcast time to server receive time only
+- Leaderboard ranking must be implemented via a replaceable ranking policy
+- Default fallback tie-break is earlier participant creation order
+- State access must go through a clear storage interface
+- Initial storage may be in-memory, but the architecture must support a scalable shared-state or database-backed replacement
 
 ## Current Guidance
 
@@ -60,7 +69,7 @@ Do not optimize around a specific language, framework, or transport yet. Those c
 - No source code yet
 - No tests yet
 - No runnable local setup yet
-- No architecture diagram yet
+- Module docs are still placeholders and need refinement
 
 ## Handoff Notes
 
