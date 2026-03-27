@@ -44,6 +44,11 @@ This file defines how AI assistants should work in this repository. It is the pr
 - Prefer AI for drafting, brainstorming, refactoring proposals, and test case generation.
 - Human or agent review is required for protocol design, state transitions, concurrency assumptions, and scoring correctness.
 - When AI suggestions are rejected, record the reason if it affected architecture or implementation direction.
+- For architecture work, present the reasoning and high-risk decision points to the user before locking them in.
+- Prioritize user decisions on choices that are hard to change, materially affect delivery risk, or have a high chance of causing failure if chosen poorly.
+- For lower-risk technical details, choose the best pragmatic option and document it.
+- Log each meaningful architecture decision in the relevant working log when it is made or revised.
+- Add explicit tags such as `questionable` or `needs verification` when a decision or assumption is provisional, weakly supported, or still awaiting validation.
 
 ## AI Diary Requirement
 
@@ -66,9 +71,13 @@ This file defines how AI assistants should work in this repository. It is the pr
 - Start each repository-authored markdown file with its own filename as the top heading.
 - Use repository-relative paths in documentation; do not embed local machine-specific absolute paths.
 - Avoid duplicating the same decision in many places; link or reference the canonical document instead.
+- Use a stable-doc plus working-log pattern for evolving design areas.
 - Use `docs/PROJECT_PLAN.md` for roadmap and progress stages.
 - Use `docs/IMPLEMENTATION_STATUS.md` for current snapshot and handoff context.
+- Record architecture exploration and decisions in `docs/architecture/` so future sessions can recover context quickly.
+- Record module-specific exploration and decisions in `docs/modules/` and `docs/modules/logs/` as those areas mature.
 - Use module docs for stable design details and tradeoffs.
+- Preserve decision history clearly enough that later sessions can see what was considered, what was decided, and what still needs verification.
 
 ## Coding Rules
 
@@ -87,5 +96,6 @@ Every substantial work session should leave behind:
 - updated status
 - updated AI diary entry when AI materially affected the work
 - changed decisions or assumptions
+- updated architecture or module working log when design reasoning evolved
 - commands used for verification
 - known gaps or deferred work

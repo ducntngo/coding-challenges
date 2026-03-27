@@ -48,6 +48,7 @@ This repository is for a coding challenge submission. Contributors, including AI
 - Use concise sections with clear ownership of purpose.
 - Keep canonical information in one file and reference it elsewhere.
 - Record major tradeoffs, especially those relevant to the interview discussion.
+- Keep stable design guidance separate from working logs so draft reasoning and finalized principles are easy to distinguish.
 
 ## Build And Test Expectations
 

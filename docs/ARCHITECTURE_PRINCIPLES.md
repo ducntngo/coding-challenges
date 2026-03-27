@@ -6,6 +6,12 @@
 
 This is an early placeholder document. It captures initial structure and intent, not finalized implementation decisions.
 
+## Related Records
+
+- Stable principles live here.
+- Working discussion, options, assumptions, and session-by-session architecture notes should go in `docs/architecture/`.
+- Architecture session logs should be stored under `docs/architecture/logs/`.
+
 ## Purpose
 
 This document defines the architectural direction for the challenge solution. It should remain relatively stable and explain why the system is shaped the way it is.
