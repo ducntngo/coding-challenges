@@ -7,6 +7,7 @@ This file defines how AI assistants should work in this repository. It is the pr
 ## Operating Principles
 
 - Treat markdown docs in `docs/` as the source of truth before making code changes.
+- Start new work from `main` after updating it with `git pull --rebase`.
 - Read `CONTRIBUTING.md`, `docs/PROJECT_PLAN.md`, and `docs/IMPLEMENTATION_STATUS.md` at the start of every new session.
 - Keep changes aligned with the challenge acceptance criteria: join quiz by ID, real-time score updates, and real-time leaderboard updates.
 - Prefer small, verifiable increments over large speculative implementations.
@@ -17,10 +18,13 @@ This file defines how AI assistants should work in this repository. It is the pr
 
 - All changes must be submitted through a pull request before merging to `main`.
 - Prefer one pull request per coherent slice of work.
+- Use descriptive branch names with a type prefix such as `feat/`, `fix/`, `chore/`, or `docs/`.
 - Pull requests should be squash-merged so each PR becomes one commit on `main`.
 - While a PR is in progress, prefer amending the existing branch commit instead of stacking many commits.
 - Keep branches short-lived and rebased or refreshed as needed to stay close to trunk.
 - Every pull request must include at least one AI usage diary entry under `docs/ai-usage/`.
+- Keep commit subjects easy to read and at or under 50 characters when practical.
+- Use the commit body for additional detail when context is needed.
 
 ## Required Workflow
 
