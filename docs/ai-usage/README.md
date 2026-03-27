@@ -35,6 +35,7 @@ Use sortable file names:
 Each entry should cover:
 
 - date
+- timestamp in ISO 8601 with timezone
 - related commit(s) or branch
 - task summary
 - AI tools used
@@ -42,6 +43,8 @@ Each entry should cover:
 - outputs influenced by AI
 - human verification and refinements
 - risks or follow-up items
+
+Prefer combined entries for one coherent work session or PR slice rather than creating one file per tiny decision.
 
 ## Baseline Format
 

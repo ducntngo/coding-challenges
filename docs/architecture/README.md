@@ -10,6 +10,8 @@ This directory keeps architecture context that may evolve across sessions. It ex
 
 - `docs/ARCHITECTURE_PRINCIPLES.md`
   - Stable architecture guidance and durable design principles
+- `docs/architecture/TRADEOFFS.md`
+  - Canonical list of explicit architecture tradeoffs and chosen directions
 - `docs/architecture/logs/`
   - Session-by-session architecture working logs
 
@@ -31,6 +33,8 @@ Use architecture logs to record:
 
 Whenever architecture reasoning changes in a meaningful way, add or update a log entry before ending the session.
 Each meaningful decision should be logged, even if it remains provisional.
+Prefer combined session-oriented logs with clearly labeled decisions, instead of creating a separate file for every small decision.
+Include explicit timestamps in log entries and, when useful, near individual decision notes. Prefer ISO 8601 with timezone.
 
 ## Naming
 
@@ -44,5 +48,6 @@ Use sortable file names:
 - `docs/PROJECT_PLAN.md` tracks sequencing
 - `docs/IMPLEMENTATION_STATUS.md` tracks current state
 - `docs/ARCHITECTURE_PRINCIPLES.md` captures durable guidance
+- `docs/architecture/TRADEOFFS.md` captures the explicit tradeoffs that tie architecture decisions together
 - `docs/modules/` captures stable module-level design
 - `docs/modules/logs/` will capture module working logs later

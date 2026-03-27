@@ -6,6 +6,10 @@
 
 2026-03-27
 
+## Timestamp
+
+2026-03-27T21:54:27+07:00
+
 ## Session Goal
 
 Capture the initial architecture framing before refining the stable architecture document.
@@ -78,9 +82,7 @@ The in-memory state assumption is intentionally provisional. It is acceptable fo
 
 ## Assumptions To Resolve Later
 
-- whether in-memory state remains sufficient for the final implementation or should be replaced by a database-backed or shared-state approach
-- the tie-break rule for equal scores
-- whether submission order affects score or ranking
+- the exact score formula for faster correct answers
 
 ## Architectural Direction
 
@@ -89,7 +91,8 @@ Initial direction:
 - keep transport concerns separate from domain logic
 - isolate session management from scoring and ranking logic
 - keep the implementation small and deterministic
-- accept in-memory state only as a tentative implementation starting point
+- treat deterministic server-side scoring and ranking as a core game principle
+- accept in-memory state only as an implementation starting point behind a storage interface
 - explain a production path involving shared state and fan-out mechanisms later
 
 ## Implementation Boundary Decision
@@ -135,12 +138,21 @@ Current working decisions:
 - participant identity is server-issued and session-scoped, not authenticated
 - reconnect remains in scope and should be supported in a limited way
 - reconnect uses a server-issued opaque resume token bound to the participant and quiz session
-- only one active connection per participant should be allowed at a time `[needs verification]`
-- if the same participant rejoins, the latest connection should replace the prior one `[needs verification]`
+- only one active connection per participant should be allowed at a time
+- if the same participant rejoins, the latest connection should replace the prior one
+- session and participant data access should go through a clear store or repository interface
+- the initial store implementation may be in-memory
+- the long-term scaling path requires a scalable shared state or database-backed implementation
+- with process-local in-memory state, a live session is effectively owned by one application instance at a time
 - each participant may submit only one answer per question
 - subsequent answers for the same participant and question should be rejected by the server
 - client or demo UI should not offer repeat answering once a question has already been answered
-- leaderboard tie-break behavior still needs to be explicitly finalized `[needs verification]`
+- incorrect answers should receive zero score regardless of speed
+- correct answers should receive a positive score, and faster correct answers should receive higher scores
+- speed should be measured from the server-side quiz broadcast time to the server-side submission receive time
+- client-side timestamps must not be used for competitive scoring
+- leaderboard ranking should be implemented through a replaceable ranking policy
+- the default fallback tie-break should be earlier participant creation order
 
 ## Identity And Reconnect Decision
 
@@ -164,6 +176,63 @@ Reasoning behind the current decision:
 - an opaque server-issued token is easier to reason about and later migrate to a database or shared-state design
 - the reconnect model remains intentionally lightweight because the challenge does not require full account recovery or auth workflows
 
+## Reconnect Conflict Decision
+
+Current decision:
+
+- only one active connection is allowed per participant within a quiz session
+- if a new valid connection for the same participant joins or resumes, it replaces the prior active connection
+- participant state remains attached to the participant identity, not the old socket
+- the old connection should be detached deterministically and, if possible, informed that it was replaced
+
+## Reconnect Conflict Rationale
+
+Reasoning behind the current decision:
+
+- this gives the best recovery behavior for flaky or interrupted connections
+- it keeps session ownership simple
+- it avoids the complexity and ambiguity of multiple live sockets for one participant
+- it matches the decision to keep reconnect in scope without implementing full account management
+
+## Reconnect Conflict UX Note
+
+This should not usually make the player angry if implemented clearly, but there are still edge cases:
+
+- an older tab or device may be kicked out when a newer connection takes over
+- a player could be surprised if they accidentally reconnect from another tab or device
+
+To reduce that risk:
+
+- preserve score and participant state across the socket swap
+- notify the replaced connection explicitly when possible
+- treat the replacement as session recovery, not as a full reset
+
+## State Layer Decision
+
+Current decision:
+
+- all session and participant state access should go through a clear storage interface
+- the first implementation of that interface may use in-memory storage
+- the architecture must preserve a path to a scalable shared-state or database-backed implementation later
+
+## State Layer Rationale
+
+Reasoning behind the current decision:
+
+- this keeps implementation complexity low for the challenge
+- it avoids coupling the domain model directly to an in-memory data structure
+- it preserves the option to move to Redis, Postgres, or another scalable backing store later
+- it keeps reconnect and session ownership logic compatible with a future shared-state design
+
+## State Layer Scaling Note
+
+This choice does not mean the whole system is limited to one machine total. It means:
+
+- one application instance may host many sessions
+- with process-local in-memory state, any given live session is effectively tied to one instance at a time
+- multiple instances can still exist, but safe multi-instance handling of the same live session requires shared state and coordination
+- horizontal scale for live sessions therefore requires a scalable shared store or equivalent coordination layer
+
 ## Answer Submission Decision
 
 Current decision:
@@ -182,6 +251,51 @@ Reasoning behind the current decision:
 - it simplifies session state and test design
 - it matches the expected behavior of similar quiz-style products
 - it prevents the UI from being the only enforcement layer while still allowing the UI to guide correct behavior
+
+## Scoring Decision
+
+Current decision:
+
+- incorrect answers always receive zero score, regardless of speed
+- correct answers receive positive score
+- among correct answers, faster answers should receive higher score
+- the backend should be the authority for speed measurement and score assignment
+- speed must be measured from the server-recorded broadcast instant to the server-recorded submission receive instant
+- client-provided timestamps must not affect score calculation
+
+## Scoring Rationale
+
+Reasoning behind the current decision:
+
+- this matches the expected behavior of competitive quiz-style products
+- it keeps correctness as the baseline gate for scoring
+- it rewards speed without allowing incorrect answers to benefit from answering quickly
+- it makes the backend, not the UI, the authority for competitive fairness
+- it avoids client clock skew and client-side timestamp manipulation
+
+## Scoring Notes
+
+- the exact scoring curve or formula is still open `[needs verification]`
+- if future ranking experiments are needed, they should be implemented by swapping ranking policy rather than rewriting session flow
+- timestamp origin matters: the start timestamp must be the server-recorded broadcast time, and the end timestamp must be the server-recorded submission receive time
+
+## Leaderboard Ranking Decision
+
+Current decision:
+
+- leaderboard ordering should be implemented through a replaceable ranking policy
+- the default ranking policy should sort by total score descending
+- if computed scores are equal, the default fallback tie-break should be earlier participant creation order
+- future experiments or product variants should change ranking policy rather than core session or scoring flow
+
+## Leaderboard Ranking Rationale
+
+Reasoning behind the current decision:
+
+- ranking behavior is likely to evolve and may be A/B tested later
+- a replaceable policy keeps this change surface small
+- using creation order as the default fallback is deterministic and easy to replace
+- this keeps the current design simple without pretending the default tie-break is a permanent product truth
 
 ## Decision-Making Workflow Note
 

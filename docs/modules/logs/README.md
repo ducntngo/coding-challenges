@@ -15,11 +15,13 @@ Use module logs to capture:
 - interface or contract decisions
 - deferred questions
 - changes in direction over time
+- explicit timestamps in ISO 8601 with timezone for each meaningful session entry
 
 ## Relationship To Module Docs
 
 - `docs/modules/*.md` should hold the stable module view
 - `docs/modules/logs/` should hold working notes and design history
+- prefer combined session logs with multiple labeled decisions over one file per small decision
 
 ## Status
 
