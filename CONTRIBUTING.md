@@ -16,10 +16,13 @@ This repository is for a coding challenge submission. Contributors, including AI
 
 - All commits must reach `main` through a pull request.
 - Each pull request should represent one coherent unit of work.
+- Use descriptive branch names with a type prefix such as `feat/`, `fix/`, `chore/`, or `docs/`.
 - The repository uses squash merge, so each pull request should land as a single commit on `main`.
 - While iterating on an open PR, prefer amending the existing branch commit rather than accumulating many commits.
 - Do not merge direct commits to `main`.
 - Every pull request must include at least one AI usage diary entry in `docs/ai-usage/`.
+- Keep commit subjects easy to read and at or under 50 characters when practical.
+- Put extra explanation in the commit body instead of overloading the subject line.
 
 ## Proposed Repository Workflow
 
