@@ -39,7 +39,22 @@ This repository is for a coding challenge submission. Contributors, including AI
 - Separate domain logic from I/O and framework-specific code.
 - Add tests for scoring, ranking, session state, and protocol handling.
 - Favor deterministic behavior and explicit error handling.
-- Delay final language and framework choices until the planned stack-selection stage unless a decision has already been documented.
+- Follow the selected stage-3 stack unless a change is explicitly approved and documented.
+
+## Local Environment Setup
+
+- Required runtime: Node.js `24.x`
+- Package manager: `npm`
+- Preferred version manager: `nvm` using the repository `.nvmrc`
+- Shared onboarding command for humans and AI assistants: `npm run bootstrap`
+
+Recommended setup flow:
+
+1. `nvm install`
+2. `nvm use`
+3. `npm run bootstrap`
+
+If Node.js `24.x` is temporarily unavailable locally, `SKIP_NODE_VERSION_CHECK=1 npm run bootstrap` may be used for non-authoritative local checks only. Merge readiness still depends on the documented version and CI.
 
 ## Documentation Standards
 
@@ -55,14 +70,23 @@ This repository is for a coding challenge submission. Contributors, including AI
 
 ## Build And Test Expectations
 
-This file establishes the expectation that the project must provide:
+Current baseline commands:
 
-- a documented install command
-- a documented local run command
-- a documented test command
-- a documented demo flow for the reviewer
+- install and bootstrap: `npm run bootstrap`
+- typecheck: `npm run typecheck`
+- unit tests: `npm test`
+- build: `npm run build`
+- local development server: `npm run dev`
 
-These commands will be filled in once the implementation stack is finalized.
+Current CI baseline:
+
+- GitHub-hosted GitHub Actions runner
+- Node.js `24`
+- `npm ci`
+- `npm run typecheck`
+- `npm test`
+
+The reviewer-facing demo flow can stay lightweight until the participation flow is implemented, but install, run, and test commands must stay current as the scaffold evolves.
 
 ## Security Expectations
 

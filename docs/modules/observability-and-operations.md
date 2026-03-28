@@ -81,9 +81,8 @@ Useful first-pass metrics:
 
 Useful first-pass health signals:
 
-- process alive
-- can accept new connections
-- can read or mutate live session state
+- foundation scaffold baseline: `GET /health` returning `status`, `service`, and `timestamp`
+- later readiness signal if the implementation needs a stronger indication that it can accept connections and mutate live session state
 
 ## Failure Diagnosis Rules
 
@@ -133,6 +132,6 @@ Build this module in this order:
 
 ## Open Questions
 
-- exact minimum health signal surface for the chosen runtime `[needs verification]`
+- whether a separate readiness signal is needed once real session mutation is implemented `[questionable]`
 - exact challenge-scope metric set versus design-only metric set `[questionable]`
 - whether leaderboard update logs should include ordered summaries or only change counts `[questionable]`

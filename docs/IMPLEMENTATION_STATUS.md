@@ -4,11 +4,11 @@
 
 ## Status
 
-This file is active and should be kept current, but some referenced design docs are still placeholders at this stage.
+This file is active and should be kept current through implementation and verification.
 
 ## Current Snapshot
 
-Repository state is still pre-implementation. The documentation scaffold is merged, the stable architecture baseline is defined, and stable first-pass module contracts now exist for all planned modules. The open-question review is complete, the initial implementation stack is now selected, and the project is moving through stage 3 with an explicit plan to add simple CI, then scaffold interfaces, mocks, and skeletal tests before deep implementation.
+Repository state is now in early implementation. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and the first guard-rail tests. The project is moving from stage 3 foundation work into stage 4 participation flow implementation.
 
 ## Completed
 
@@ -35,29 +35,38 @@ Repository state is still pre-implementation. The documentation scaffold is merg
 - Updated governance docs to require short type tags in commit subjects
 - Selected the initial implementation stack and refined `docs/implementation/01-foundation.md`
 - Logged the stack-selection rationale in the architecture tradeoff docs
+- Added the initial Node.js and TypeScript project scaffold, scripts, and config files
+- Added lightweight GitHub Actions CI for install, typecheck, and unit tests on GitHub-hosted runners
+- Added a shared `npm run bootstrap` onboarding path backed by `scripts/bootstrap.sh`
+- Added the initial Fastify app shell with `/health` and `/ws`
+- Added interface-first contracts for transport, session, scoring, store, and quiz-definition access
+- Added in-memory and mocked foundation adapters behind those interfaces
+- Added initial guard-rail tests for health response and transport bound-state rejection behavior
+- Verified the scaffold with local typecheck, test, and build runs
 
 ## In Progress
 
-- Moving from stack selection into CI setup and interface scaffolding prep
-- Keeping the remaining implementation-plan placeholders explicit until they are refined
+- Moving from the completed foundation scaffold into the first usable participation slice
+- Keeping join, reconnect, disconnect, and scoring behavior behind the established interfaces while the implementations deepen
 
 ## Next Recommended Steps
 
-1. Add a simple CI pipeline for the selected stack.
-2. Settle the remaining payload-shape and health-surface details that affect scaffolding.
-3. Scaffold all planned interfaces and mock integrations before deep implementation work.
-4. Add skeletal tests around those seams as early guard rails.
+1. Implement `joinSession` behind the existing session and store interfaces.
+2. Map `session.join` to a successful transport acknowledgement and snapshot payload.
+3. Bind successful joins to the connection context and cover that with tests.
+4. Implement `session.reconnect` and next disconnect handling behind the same seams.
 5. Keep `docs/ai-usage/` updated as work lands in commits.
 
 ## Open Decisions
 
-- Exact version pins and project scripts for the selected stack
 - Exact event names and payload schema
 - Exact speed-based scoring formula
 - Exact reconnect retention TTL and inactive-session cleanup thresholds
 - Exact scalable backing store choice for the future production path
 - Exact transport-visible shape of incremental score and leaderboard events
 - Exact logs and metrics set to keep in the challenge implementation versus in the design-only discussion
+- Exact join or reconnect success payload field list beyond the current snapshot baseline
+- Exact rejection code set for duplicate, late, and wrong-question submissions
 
 ## Open-Question Review Outcome
 
@@ -67,10 +76,9 @@ Stack-blocking items:
 
 Resolve during stage 3 or early implementation:
 
-- exact session phase model
 - exact payload fields for snapshots and answer-handling results
 - exact rejection code set
-- exact minimum health signal surface for the chosen runtime
+- whether the minimal health signal needs a separate readiness companion once real session mutation deepens
 
 Intentional deferrals:
 
@@ -113,44 +121,47 @@ Intentional deferrals:
 - Observability uses shared correlation fields across session, connection, participant, and request boundaries
 - The challenge implementation should favor a minimal but diagnosable observability surface instead of a production-heavy setup
 - Initial implementation stack: Node.js LTS, TypeScript, Fastify, `@fastify/websocket`, `node:test`, and GitHub Actions
+- Runtime baseline is pinned to Node.js `24.x` via `.nvmrc`, `package.json`, and CI
+- Shared environment onboarding path is `npm run bootstrap`
+- Lightweight CI runs `npm ci`, `npm run typecheck`, and `npm test`
+- The foundation scaffold exposes `GET /health` returning `status`, `service`, and `timestamp`
+- The current session-phase baseline is `lobby`, `question_open`, `question_closed`, and `finished`
 
 ## Current Guidance
 
-Use the completed first-pass module contracts, the open-question review outcome, and the selected implementation stack as the reference baseline for stage 3. The intended sequence is simple CI setup, interface scaffolding, mocked seams, then skeletal tests and deeper implementation. Stable module docs should stay concise but include interface-first build steps and unit-test guard rails for the later implementation pass.
+Use the completed module contracts plus the stage-3 scaffold as the baseline. Start new implementation work with `npm run bootstrap`, keep behavior changes behind the existing interfaces, and add or expand tests before deepening each flow. CI should stay lightweight and authoritative on Node.js `24.x`.
 
 ## Known Gaps
 
-- No source code yet
-- No tests yet
-- No runnable local setup yet
-- No CI pipeline yet
-- No interface scaffold or mocked integration seams yet
+- `session.join`, `session.reconnect`, and answer acceptance are still stubbed
+- No end-to-end successful WebSocket participation flow exists yet
+- No scoring or leaderboard mutation path exists yet
+- No richer observability hooks exist beyond the minimal health surface and app logging
 
 ## Current Module Focus
 
-- Active focus: `stage 3 CI setup and interface scaffolding prep`
+- Active focus: `stage 4 participation flow implementation`
 
 ## Handoff Notes
 
 Any new session should start by reading:
 
 1. `AGENTS.md`
-2. `docs/PROJECT_PLAN.md`
-3. `docs/ARCHITECTURE_PRINCIPLES.md`
-4. `docs/architecture/logs/2026-03-28-03-stack-selection.md`
-5. `docs/architecture/logs/2026-03-28-02-open-question-review.md`
-6. `docs/modules/MODULE_DESIGN_PLAN.md`
-7. `docs/modules/quiz-session.md`
-8. `docs/modules/realtime-transport.md`
-9. `docs/modules/scoring-and-leaderboard.md`
-10. `docs/modules/observability-and-operations.md`
-11. relevant files under `docs/implementation/`
+2. `CONTRIBUTING.md`
+3. `docs/PROJECT_PLAN.md`
+4. `docs/IMPLEMENTATION_STATUS.md`
+5. `docs/implementation/01-foundation.md`
+6. `docs/modules/quiz-session.md`
+7. `docs/modules/realtime-transport.md`
+8. `docs/modules/scoring-and-leaderboard.md`
+9. `docs/modules/observability-and-operations.md`
+10. `scripts/bootstrap.sh`
 
 Tomorrow's intended entry point:
 
-- active focus: `stage 3 CI setup and interface scaffolding prep`
-- first unresolved topic: add simple CI for the chosen stack
-- next unresolved topics: finalize scaffold-affecting payload and health-surface details
+- active focus: `stage 4 participation flow implementation`
+- first unresolved topic: implement `session.join` and successful transport binding
+- next unresolved topics: reconnect flow, disconnect handling, and richer participation tests
 
 ## Verification History
 
@@ -167,3 +178,4 @@ Tomorrow's intended entry point:
 - Rechecked governance docs and aligned commit-subject rules across `AGENTS.md` and `CONTRIBUTING.md`
 - Updated the stage-3 plan to require a simple CI pipeline immediately after stack selection
 - Reviewed official Node.js and Fastify documentation before selecting the initial implementation stack
+- Verified the foundation scaffold locally with `npm run typecheck`, `npm test`, and `npm run build`

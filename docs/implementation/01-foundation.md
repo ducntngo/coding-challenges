@@ -4,7 +4,7 @@
 
 ## Status
 
-Stable first-pass foundation plan. The implementation stack is selected, and the next work is to add simple CI, scaffold the project, and put the first interface seams in place before deeper module implementation.
+Foundation scaffold implemented. This document now records the stage-3 baseline that exists in the repository and the handoff into the first participation-flow slice.
 
 ## Goal
 
@@ -31,15 +31,17 @@ Establish the initial runnable backend foundation for the real-time quiz service
 - `node:test` keeps the initial guard-rail test setup low-dependency and close to the runtime.
 - GitHub Actions is the simplest CI baseline for this repository and is enough for install, typecheck, and unit-test checks.
 
-## Deliverables
+## Baseline In Repository
 
-- project manifest and TypeScript configuration
-- initial source tree with clear module seams
+- project manifest, lockfile, `.nvmrc`, and TypeScript configuration
+- shared onboarding command: `npm run bootstrap`
+- lightweight GitHub Actions CI for `npm ci`, `npm run typecheck`, and `npm test`
+- initial source tree with explicit module seams
 - minimal Fastify app entrypoint
-- health route and WebSocket route placeholder
-- mocked quiz-definition source and in-memory store interfaces
-- simple CI workflow for install, typecheck, and unit tests
-- starter run and test instructions
+- `GET /health` returning `status`, `service`, and `timestamp`
+- `GET /ws` WebSocket route placeholder with transport envelope handling
+- mocked quiz-definition source and in-memory session-store adapter
+- initial guard-rail tests for app health and transport bound-state rejection
 
 ## Suggested Project Shape
 
@@ -54,14 +56,25 @@ Establish the initial runnable backend foundation for the real-time quiz service
 
 ## Detailed Steps
 
-1. Initialize the Node.js and TypeScript project files, scripts, and directory structure.
-2. Add a simple GitHub Actions workflow immediately after the stack scaffold exists.
-3. Create the minimal Fastify app shell with startup and shutdown paths.
-4. Add the initial health route and WebSocket route placeholder.
-5. Define the first interfaces for session access, scoring, store access, and quiz-definition access.
-6. Add in-memory and mocked implementations so the seams are live before deeper behavior is built.
-7. Add the first `node:test` guard-rail tests around app startup, health route behavior, and interface-wiring seams.
-8. Confirm the project installs, starts, and passes the initial CI checks locally.
+1. Read `AGENTS.md`, `CONTRIBUTING.md`, `docs/PROJECT_PLAN.md`, and `docs/IMPLEMENTATION_STATUS.md`.
+2. Use Node.js `24.x` from `.nvmrc`.
+3. Run `npm run bootstrap`.
+4. Verify with `npm run typecheck`, `npm test`, and `npm run build`.
+5. Start deeper implementation only behind the existing interfaces and tests.
+
+## Onboarding Notes
+
+Recommended local setup:
+
+1. `nvm install`
+2. `nvm use`
+3. `npm run bootstrap`
+
+Fallback for temporary local checks when Node.js `24.x` is unavailable:
+
+- `SKIP_NODE_VERSION_CHECK=1 npm run bootstrap`
+
+That fallback is local-only. CI remains the merge gate and runs on Node.js `24`.
 
 ## Exit Criteria
 
@@ -72,8 +85,10 @@ Establish the initial runnable backend foundation for the real-time quiz service
 - structure supports later separation of modules
 - interface seams exist before deeper module logic is added
 
+Stage-3 exit criteria are now met.
+
 ## Open Follow-Ups
 
-- exact version pins for Node.js, TypeScript, and core dependencies
-- exact project scripts and formatting or linting baseline
-- exact health endpoint response shape
+- implement `session.join` and the first success acknowledgement path
+- implement reconnect and disconnect handling behind the same seams
+- expand tests from scaffold guard rails into real participation coverage

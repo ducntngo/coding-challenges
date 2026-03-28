@@ -73,6 +73,13 @@ Keep the first implementation centered on:
 - `ParticipantRecord`: ids, reconnect token, connection owner, lifecycle state, join order, score or answer markers, timestamps
 - small abstractions for `Clock`, `IdGenerator`, and reconnect token generation so unit tests stay deterministic
 
+Initial scaffold phase set:
+
+- `lobby`
+- `question_open`
+- `question_closed`
+- `finished`
+
 ## Session Lifecycle Model
 
 ```mermaid
@@ -211,5 +218,5 @@ The implementation should log or emit metrics around:
 
 - exact reconnect retention TTL and inactive-session cleanup thresholds `[needs verification]`
 - whether the first implementation should delete closed sessions immediately or keep a short-lived tombstone `[questionable]`
-- exact session phase model for quiz start, question progression, and final closure `[needs verification]`
+- whether additional non-player-facing phases are needed beyond the initial scaffold set `[questionable]`
 - exact mapping from these module results to transport event names and payload schemas `[needs verification]`
