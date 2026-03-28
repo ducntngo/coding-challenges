@@ -2,6 +2,7 @@ import type { AnswerSubmissionService } from "../answer-submission/contracts";
 import type { QuizSessionService } from "../session/contracts";
 import { SessionJoinRejectedError } from "../session/contracts";
 import { SessionReconnectRejectedError } from "../session/contracts";
+import { buildTransportSessionView } from "./session-view";
 import type { ConnectionContext } from "./connection-context";
 import {
   type AnswerSubmitPayload,
@@ -13,7 +14,6 @@ import {
   type ParticipantScoreUpdatedPayload,
   type SessionJoinPayload,
   type SessionReconnectPayload,
-  type TransportSessionView,
   type TransportErrorCode,
 } from "./contracts";
 import type { TransportCommandHandler } from "./transport-command-handler";
@@ -449,30 +449,6 @@ function validateSessionReconnectPayload(
       quizId: candidate.quizId.trim(),
       reconnectToken: candidate.reconnectToken.trim(),
     },
-  };
-}
-
-function buildTransportSessionView(
-  result: Awaited<ReturnType<QuizSessionService["joinSession"]>>,
-): TransportSessionView {
-  return {
-    session: {
-      quizId: result.snapshot.quizId,
-      sessionInstanceId: result.snapshot.sessionInstanceId,
-      status: result.snapshot.status,
-      phase: result.snapshot.phase,
-      currentQuestionId: result.snapshot.currentQuestionId,
-      version: result.snapshot.version,
-    },
-    self: {
-      participantId: result.self.participantId,
-      displayName: result.self.displayName,
-      state: result.self.state,
-      score: result.self.score,
-      reconnectToken: result.self.reconnectToken,
-    },
-    participants: result.snapshot.participants,
-    leaderboard: result.snapshot.leaderboard,
   };
 }
 

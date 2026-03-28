@@ -9,6 +9,7 @@ import { createApp } from "../../src/app/create-app";
 import type { AppDependencies } from "../../src/app/dependencies";
 import type { QuizDefinition, QuizDefinitionSource } from "../../src/quiz-source/contracts";
 import { StubScoringService } from "../../src/scoring/stub-scoring-service";
+import { InMemorySessionProgressionNotifier } from "../../src/session/session-progression-events";
 import type { SessionSnapshot } from "../../src/session/contracts";
 import { StubSessionProgressionService } from "../../src/session/stub-session-progression-service";
 import { StubQuizSessionService } from "../../src/session/stub-quiz-session-service";
@@ -19,6 +20,7 @@ import type {
   LeaderboardUpdatedPayload,
   OutboundEventEnvelope,
   ParticipantScoreUpdatedPayload,
+  SessionSnapshotPayload,
   TransportSessionView,
 } from "../../src/transport/contracts";
 
@@ -475,9 +477,12 @@ test("headless integration harness rejects answers when the session phase is clo
     host: "127.0.0.1",
   });
   const wsUrl = buildWebSocketUrl(address, "/ws");
-  const aliceConnection = await IntegrationTestClient.connect(wsUrl);
+  const [aliceConnection, bobConnection] = await Promise.all([
+    IntegrationTestClient.connect(wsUrl),
+    IntegrationTestClient.connect(wsUrl),
+  ]);
 
-  clients.push(aliceConnection);
+  clients.push(aliceConnection, bobConnection);
 
   await aliceConnection.sendCommand({
     command: "session.join",
@@ -487,12 +492,40 @@ test("headless integration harness rejects answers when the session phase is clo
       displayName: "Alice",
     },
   });
+  await bobConnection.sendCommand({
+    command: "session.join",
+    requestId: "req-join-phase-closed-bob",
+    payload: {
+      quizId: "demo-quiz",
+      displayName: "Bob",
+    },
+  });
 
   const closedSnapshot = await deps.progressionService.closeCurrentQuestion(
     "demo-quiz",
   );
 
   assert.equal(closedSnapshot.phase, "question_closed");
+
+  const [aliceSnapshotEvent, bobSnapshotEvent] = await Promise.all([
+    aliceConnection.readEvents(1),
+    bobConnection.readEvents(1),
+  ]);
+
+  assertSessionSnapshotEvent(
+    aliceSnapshotEvent[0]!,
+    "demo-quiz",
+    "question_closed",
+    "question-1",
+    "Alice",
+  );
+  assertSessionSnapshotEvent(
+    bobSnapshotEvent[0]!,
+    "demo-quiz",
+    "question_closed",
+    "question-1",
+    "Bob",
+  );
 
   const rejectedEvent = await aliceConnection.sendCommand({
     command: "answer.submit",
@@ -559,6 +592,16 @@ test("headless integration harness rejects answers for a non-active question", a
 
   assert.equal(advancedSnapshot.phase, "question_open");
   assert.equal(advancedSnapshot.currentQuestionId, "question-2");
+
+  const snapshotEvents = await aliceConnection.readEvents(1);
+
+  assertSessionSnapshotEvent(
+    snapshotEvents[0]!,
+    "demo-quiz",
+    "question_open",
+    "question-2",
+    "Alice",
+  );
 
   const rejectedEvent = await aliceConnection.sendCommand({
     command: "answer.submit",
@@ -721,6 +764,7 @@ function buildIntegrationDependencies(): AppDependencies {
     },
   ]);
   const sessionStore = new InMemorySessionStore();
+  const sessionProgressionNotifier = new InMemorySessionProgressionNotifier();
   let generatedParticipantId = 0;
   let generatedReconnectToken = 0;
   let generatedSessionId = 0;
@@ -745,6 +789,7 @@ function buildIntegrationDependencies(): AppDependencies {
   const progressionService = new StubSessionProgressionService(
     sessionStore,
     quizDefinitionSource,
+    sessionProgressionNotifier,
   );
   const scoringService = new StubScoringService();
   const answerSubmissionService = new StubAnswerSubmissionService(
@@ -762,6 +807,7 @@ function buildIntegrationDependencies(): AppDependencies {
     sessionStore,
     sessionService,
     progressionService,
+    sessionProgressionNotifier,
     scoringService,
     answerSubmissionService,
     transportCommandHandler,
@@ -821,6 +867,26 @@ function assertLeaderboardEvent(
   const payload = event.payload as LeaderboardUpdatedPayload;
 
   assert.equal(payload.quizId, expectedQuizId);
+
+  return payload;
+}
+
+function assertSessionSnapshotEvent(
+  event: OutboundEventEnvelope,
+  expectedQuizId: string,
+  expectedPhase: string,
+  expectedQuestionId: string | null,
+  expectedDisplayName: string,
+): SessionSnapshotPayload {
+  assert.equal(event.event, "session.snapshot");
+  assert.equal(event.requestId, undefined);
+
+  const payload = event.payload as SessionSnapshotPayload;
+
+  assert.equal(payload.session.quizId, expectedQuizId);
+  assert.equal(payload.session.phase, expectedPhase);
+  assert.equal(payload.session.currentQuestionId, expectedQuestionId);
+  assert.equal(payload.self.displayName, expectedDisplayName);
 
   return payload;
 }

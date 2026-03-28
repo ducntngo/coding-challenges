@@ -5,12 +5,14 @@ import {
   type SessionProgressionService,
   type SessionSnapshot,
 } from "./contracts";
+import type { SessionProgressionNotifier } from "./session-progression-events";
 import { buildSessionAggregate } from "./session-aggregate";
 
 export class StubSessionProgressionService implements SessionProgressionService {
   constructor(
     private readonly sessionStore: SessionStore,
     private readonly quizDefinitionSource: QuizDefinitionSource,
+    private readonly sessionProgressionNotifier?: SessionProgressionNotifier,
   ) {}
 
   async closeCurrentQuestion(quizId: string): Promise<SessionSnapshot> {
@@ -54,6 +56,7 @@ export class StubSessionProgressionService implements SessionProgressionService 
     });
 
     await this.sessionStore.saveSession(nextSession);
+    this.sessionProgressionNotifier?.publish({ session: nextSession });
 
     return nextSession.snapshot;
   }
@@ -103,6 +106,7 @@ export class StubSessionProgressionService implements SessionProgressionService 
     });
 
     await this.sessionStore.saveSession(nextSession);
+    this.sessionProgressionNotifier?.publish({ session: nextSession });
 
     return nextSession.snapshot;
   }

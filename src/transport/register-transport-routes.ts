@@ -3,16 +3,46 @@ import { randomUUID } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import WebSocket, { type RawData } from "ws";
 
+import type { SessionAggregate } from "../session/contracts";
+import type { SessionProgressionNotifier } from "../session/session-progression-events";
 import type { ConnectionContext } from "./connection-context";
-import type { OutboundEventEnvelope } from "./contracts";
+import type {
+  OutboundEventEnvelope,
+  SessionSnapshotPayload,
+} from "./contracts";
+import { buildTransportSessionViewFromSession } from "./session-view";
 import { SessionConnectionRegistry } from "./session-connection-registry";
 import type { TransportCommandHandler } from "./transport-command-handler";
 
+export interface TransportRouteDependencies {
+  readonly transportCommandHandler: TransportCommandHandler;
+  readonly sessionProgressionNotifier: SessionProgressionNotifier;
+}
+
 export function registerTransportRoutes(
   app: FastifyInstance,
-  handler: TransportCommandHandler,
+  deps: TransportRouteDependencies,
 ): void {
   const connectionRegistry = new SessionConnectionRegistry();
+  const unsubscribeFromProgressionUpdates =
+    deps.sessionProgressionNotifier.subscribe((event) => {
+      try {
+        dispatchProgressionSnapshot(connectionRegistry, event.session);
+      } catch (error) {
+        app.log.error(
+          {
+            err: error,
+            quizId: event.session.snapshot.quizId,
+            sessionInstanceId: event.session.snapshot.sessionInstanceId,
+          },
+          "progression snapshot dispatch failed",
+        );
+      }
+    });
+
+  app.addHook("onClose", async () => {
+    unsubscribeFromProgressionUpdates();
+  });
 
   app.get("/ws", { websocket: true }, (socket: WebSocket) => {
     const ctx: ConnectionContext = {
@@ -32,7 +62,10 @@ export function registerTransportRoutes(
         typeof buffer === "string" ? buffer : buffer.toString("utf8");
 
       try {
-        const events = await handler.handleMessage(ctx, rawMessage);
+        const events = await deps.transportCommandHandler.handleMessage(
+          ctx,
+          rawMessage,
+        );
 
         registerCurrentConnection(connectionRegistry, ctx, events, sendToSocket);
         dispatchOutboundEvents(connectionRegistry, ctx, events, sendToSocket);
@@ -62,7 +95,7 @@ export function registerTransportRoutes(
               connectionId: ctx.connectionId,
             };
 
-      void handler.handleDisconnect(ctx).catch((error) => {
+      void deps.transportCommandHandler.handleDisconnect(ctx).catch((error) => {
         app.log.error(
           {
             err: error,
@@ -171,4 +204,27 @@ function withoutRequestId(
   const { requestId: _requestId, ...eventWithoutRequestId } = event;
 
   return eventWithoutRequestId;
+}
+
+function dispatchProgressionSnapshot(
+  connectionRegistry: SessionConnectionRegistry,
+  session: SessionAggregate,
+): void {
+  const recipients = connectionRegistry.getSessionConnections(session.snapshot.quizId);
+
+  for (const recipient of recipients) {
+    const payload = buildTransportSessionViewFromSession(
+      session,
+      recipient.participantId,
+    );
+
+    if (!payload) {
+      continue;
+    }
+
+    recipient.send({
+      event: "session.snapshot",
+      payload: payload satisfies SessionSnapshotPayload,
+    });
+  }
 }

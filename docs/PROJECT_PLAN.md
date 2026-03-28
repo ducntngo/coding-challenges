@@ -73,7 +73,7 @@ Within layer 2, the implementation sequence should be:
 | 2. Define architecture and module contracts | Completed | Architecture baseline, stable first-pass module contracts, and the open-question review are complete. No remaining architecture blocker currently prevents stack selection. |
 | 3. Select stack, add CI, and scaffold interfaces | Completed | The selected stack, lightweight CI, onboarding script, source tree, interface seams, in-memory or mocked adapters, and initial guard-rail tests are now in place. |
 | 4. Add guard-rail tests and participation skeleton | Completed | Join, reconnect, disconnect, the first accepted `answer.submit` path, and the early headless integration harness are now in place behind the established interfaces. |
-| 5. Implement scoring and leaderboard flow | In progress | Accepted answer handling now emits session-wide score and leaderboard updates to the active connections in the same quiz session, non-open phases reject answers, snapshots carry the active question reference, and internal progression can advance that question. Next surface progression changes to connected clients and add richer late-answer behavior without breaking the established interfaces or guard-rail tests. |
+| 5. Implement scoring and leaderboard flow | In progress | Accepted answer handling now emits session-wide score and leaderboard updates to the active connections in the same quiz session, non-open phases reject answers, snapshots carry the active question reference, internal progression can advance that question, and progression changes now fan out transport-visible `session.snapshot` updates. Next deepen scoring and add richer duplicate or late-answer behavior without breaking the established interfaces or guard-rail tests. |
 | 6. Strengthen tests, demo flow, and observability hooks | Pending | Expand tests, add an automated headless multi-player and multi-session integration scenario, improve the local multi-client demo path, and add logging plus developer run instructions. |
 | 7. Finalize submission package | Pending | Final docs, AI collaboration summary, architecture diagram, and video preparation notes. |
 
@@ -125,21 +125,21 @@ Current stage: `5. Implement scoring and leaderboard flow`
 Immediate next outputs:
 
 - deepen scoring and leaderboard behavior behind the existing seams
-- expand the early automated headless integration harness as answer and scoring behavior become real
-- surface progression changes to connected clients and add richer answer validation or rejection behavior
+- expand the early automated headless integration harness with duplicate and late-answer scenarios
+- keep the new transport-visible progression path aligned with the existing answer and scoring seams
 - keep `docs/IMPLEMENTATION_STATUS.md` aligned with the current implementation stage
 
 ## Current Next Steps
 
 1. Deepen the stub scoring behavior behind the `ScoringService` interface without thickening transport.
-2. Surface progression changes to connected clients instead of keeping them visible only through internal services and snapshots.
-3. Expand the headless integration harness with duplicate and late-answer scenarios.
-4. Keep the new session-wide fanout, phase rejection, and wrong-question rejection paths covered as scoring behavior changes.
+2. Expand the headless integration harness with duplicate and late-answer scenarios now that progression changes are visible through `session.snapshot`.
+3. Keep the new `session.snapshot`, session-wide score fanout, phase rejection, and wrong-question rejection paths covered as scoring behavior changes.
+4. Keep host-facing progression controls deferred unless they materially improve the next scoring slice.
 5. Keep the unit and integration suites separate while both continue to deepen.
 
 ## Resume Point
 
-The next session should resume just after the first internal question-progression slice behind the stage-3 scaffold.
+The next session should resume just after the first transport-visible question-progression slice behind the stage-3 scaffold.
 
 Read in this order:
 
@@ -158,7 +158,7 @@ Resume with these implementation decisions first:
 
 - deepen scoring and leaderboard behavior behind the existing interfaces
 - expand the existing headless integration harness instead of creating a separate one-off test path
-- surface progression changes to connected clients and add richer late-answer validation and rejection behavior
+- keep progression fanout on `session.snapshot` and add richer late-answer validation and rejection behavior
 - keep the current join, reconnect, and accepted-answer payload shapes stable unless there is a strong reason to change them
 
 After the first full pass through the design docs:
