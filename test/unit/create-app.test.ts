@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { buildDefaultDependencies } from "../src/app/dependencies";
-import { createApp } from "../src/app/create-app";
-import { MockQuizDefinitionSource } from "../src/quiz-source/mock-quiz-definition-source";
-import { NoopScoringService } from "../src/scoring/noop-scoring-service";
-import { StubQuizSessionService } from "../src/session/stub-quiz-session-service";
-import { InMemorySessionStore } from "../src/store/in-memory-session-store";
-import { DefaultTransportCommandHandler } from "../src/transport/default-transport-command-handler";
-import type { ConnectionContext } from "../src/transport/connection-context";
+import { buildDefaultDependencies } from "../../src/app/dependencies";
+import { createApp } from "../../src/app/create-app";
+import { MockQuizDefinitionSource } from "../../src/quiz-source/mock-quiz-definition-source";
+import { NoopScoringService } from "../../src/scoring/noop-scoring-service";
+import { StubQuizSessionService } from "../../src/session/stub-quiz-session-service";
+import { InMemorySessionStore } from "../../src/store/in-memory-session-store";
+import { DefaultTransportCommandHandler } from "../../src/transport/default-transport-command-handler";
+import type { ConnectionContext } from "../../src/transport/connection-context";
 
 test("GET /health returns the minimal health payload", async (t) => {
   const app = createApp({ logger: false });

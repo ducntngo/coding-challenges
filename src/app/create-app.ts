@@ -19,11 +19,12 @@ export function createApp(options: CreateAppOptions = {}): FastifyInstance {
   });
   const deps = options.deps ?? buildDefaultDependencies();
 
-  void app.register(websocket);
-
   app.get("/health", async () => buildHealthPayload());
 
-  registerTransportRoutes(app, deps.transportCommandHandler);
+  void app.register(async (transportApp) => {
+    await transportApp.register(websocket);
+    registerTransportRoutes(transportApp, deps.transportCommandHandler);
+  });
 
   return app;
 }

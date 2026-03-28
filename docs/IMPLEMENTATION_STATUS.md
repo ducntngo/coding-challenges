@@ -8,7 +8,7 @@ This file is active and should be kept current through implementation and verifi
 
 ## Current Snapshot
 
-Repository state is now in early implementation. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The first real participation slices are now in place for `session.join`, `session.reconnect`, and disconnect forwarding, and the project is moving deeper into stage 4 with an early headless integration harness plus answer acceptance next.
+Repository state is now in early implementation. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The first real participation slices are now in place for `session.join`, `session.reconnect`, and disconnect forwarding, and the project now also has an early headless WebSocket integration harness. The next step is answer acceptance and expanding that harness behind the same interfaces.
 
 ## Completed
 
@@ -55,19 +55,23 @@ Repository state is now in early implementation. The design baseline is stable, 
 - Added stale-disconnect-safe connection release behavior so an older connection cannot evict a newer rebound connection
 - Added tests for session disconnect, stale disconnect after reconnect, and transport-side disconnect cleanup
 - Verified the disconnect slice with local typecheck, test, and build runs
+- Fixed the WebSocket route registration order so the real `/ws` handshake succeeds under the chosen Fastify setup
+- Added an early headless WebSocket integration harness covering multiple players across concurrent quiz sessions
+- Split the automated tests into separate unit and integration suites with dedicated commands
+- Verified the split test commands locally with `npm run test:unit`, `npm run test:integration`, and `npm test`
 
 ## In Progress
 
-- Moving from the working join, reconnect, and disconnect slices into the first thin headless integration harness and answer acceptance
-- Keeping answer acceptance and scoring behavior behind the established interfaces while the implementations deepen
+- Moving from the working join, reconnect, disconnect, and early harness slices into answer acceptance
+- Keeping answer acceptance and scoring behavior behind the established interfaces while the implementations deepen, while expanding the existing harness instead of replacing it
 
 ## Next Recommended Steps
 
-1. Add an early automated headless integration harness that exercises join, reconnect, disconnect, and session isolation across multiple clients and quiz sessions.
-2. Keep unfinished answer and scoring behavior stubbed in that harness until the deeper implementations land.
-3. Start the first accepted `answer.submit` path behind the existing transport and scoring seams.
-4. Add scoring-result mapping tests before deepening leaderboard behavior.
-5. Expand the integration harness as answer handling and leaderboard updates become real.
+1. Start the first accepted `answer.submit` path behind the existing transport and scoring seams.
+2. Keep unfinished scoring behavior stubbed in the current integration harness until the deeper implementations land.
+3. Add scoring-result mapping tests before deepening leaderboard behavior.
+4. Expand the integration harness as answer handling and leaderboard updates become real.
+5. Keep the unit and integration suites separate as coverage grows.
 6. Keep `docs/ai-usage/` updated as work lands in commits.
 
 ## Open Decisions
@@ -143,6 +147,8 @@ Intentional deferrals:
 - `session.reconnect` now rebinds the existing participant identity by reconnect token and returns the same transport-visible snapshot shape as join
 - disconnect forwarding now releases the active connection owner only when the disconnect comes from the still-owning connection
 - transport-side disconnect handling now clears local binding context after forwarding the disconnect to the session boundary
+- the automated tests are now split into dedicated unit and integration suites, with `npm test` acting as the aggregate runner
+- an early headless WebSocket integration harness now covers join, reconnect, disconnect, and session isolation across multiple quiz sessions
 
 ## Current Guidance
 
@@ -151,9 +157,8 @@ Use the completed module contracts plus the stage-3 scaffold as the baseline. St
 ## Known Gaps
 
 - answer acceptance is still stubbed
-- No end-to-end successful WebSocket participation flow exists yet
+- the integration harness does not yet cover accepted answer flow, scoring, or leaderboard updates
 - No scoring or leaderboard mutation path exists yet
-- No early headless integration harness exists yet
 - No richer observability hooks exist beyond the minimal health surface and app logging
 
 ## Current Module Focus
@@ -178,8 +183,8 @@ Any new session should start by reading:
 Tomorrow's intended entry point:
 
 - active focus: `stage 4 participation flow implementation`
-- first unresolved topic: build the first thin headless integration harness over the current join, reconnect, and disconnect seams
-- next unresolved topics: answer acceptance, scoring integration, and richer participation tests
+- first unresolved topic: implement the first accepted `answer.submit` path
+- next unresolved topics: scoring integration, leaderboard updates, and expanding the integration harness
 
 ## Verification History
 
@@ -199,3 +204,5 @@ Tomorrow's intended entry point:
 - Verified the foundation scaffold locally with `npm run typecheck`, `npm test`, and `npm run build`
 - Verified the join slice locally with `npm run typecheck`, `npm test`, and `npm run build`
 - Verified the reconnect slice locally with `npm run typecheck`, `npm test`, and `npm run build`
+- Verified the disconnected slice locally with `npm run typecheck`, `npm test`, and `npm run build`
+- Verified the split unit and integration suites locally with `npm run test:unit`, `npm run test:integration`, and `npm test`
