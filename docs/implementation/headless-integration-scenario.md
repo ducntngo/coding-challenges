@@ -42,8 +42,9 @@ The harness also includes a smaller rejection scenario:
 And another rejection scenario:
 
 - a participant joins `demo-quiz`
-- the joined session snapshot exposes `currentQuestionId` as `question-1`
-- a later `answer.submit` attempt for `question-2` is rejected without mutating session state
+- the internal progression service advances the session from `question-1` to `question-2`
+- a later `answer.submit` attempt for the previous question is rejected without mutating session state
+- a submission for the new active question is still accepted
 
 ## What The Harness Asserts
 
@@ -63,15 +64,15 @@ The automated harness currently checks:
 - cross-session isolation throughout the sequence
 - rejection when a session is not in `question_open`
 - rejection when a submission targets a question other than the active `currentQuestionId`
+- successful acceptance after internal progression moves the active question forward
 
 ## Current Limitations
 
 This scenario intentionally reflects the current implementation rather than the final target behavior.
 
 - the scoring behavior is still deterministic and stubbed rather than timing-based
-- real question progression does not exist yet, so late-answer behavior is still limited
 - the current scaffold starts sessions in `question_open` because host-driven phase progression is not implemented yet
-- the current scaffold pins `currentQuestionId` to the first quiz question until progression logic exists
+- progression changes are not yet emitted to connected clients through transport events
 
 ## Expected Evolution
 
@@ -79,8 +80,7 @@ As the implementation deepens, this same scenario should grow rather than be rep
 
 Next planned additions:
 
-- duplicate, late, and wrong-question rejection scenarios
-- duplicate and late-answer rejection scenarios once progression logic exists
+- duplicate and late-answer rejection scenarios once progression changes are surfaced through runtime events
 - richer scoring behavior behind the existing interfaces
 - more question-phase-aware answer handling
 

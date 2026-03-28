@@ -8,7 +8,7 @@ This file is active and should be kept current through implementation and verifi
 
 ## Current Snapshot
 
-Repository state is now in early implementation. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The first real participation slices are now in place for `session.join`, `session.reconnect`, disconnect forwarding, and accepted `answer.submit`, and the headless WebSocket integration harness now covers concurrent sessions, session-wide score or leaderboard fanout, closed-phase answer rejection, and wrong-question rejection using explicit current-question context in the session snapshot. The next step is to deepen scoring behavior and add real question progression while keeping the same harness green.
+Repository state is now in early implementation. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The first real participation slices are now in place for `session.join`, `session.reconnect`, disconnect forwarding, accepted `answer.submit`, and internal question progression. The headless WebSocket integration harness now covers concurrent sessions, session-wide score or leaderboard fanout, closed-phase answer rejection, and wrong-question rejection using explicit current-question context in the session snapshot. The next step is to surface progression changes to connected clients and deepen scoring behavior while keeping the same harness green.
 
 ## Completed
 
@@ -78,18 +78,23 @@ Repository state is now in early implementation. The design baseline is stable, 
 - Added wrong-question rejection so submissions must target the active question reference in the session snapshot
 - Expanded the unit suite and headless integration harness with wrong-question rejection coverage
 - Verified the current-question-context slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`
+- Added a `SessionProgressionService` seam for closing the current question and advancing to the next question
+- Added unit coverage for advancing from `question-1` to `question-2` and then to `finished`
+- Replaced direct session-store mutation in the rejection tests with the progression service
+- Expanded the headless integration harness so a progressed session rejects the previous question and still accepts the new active question
+- Verified the question-progression slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`
 
 ## In Progress
 
-- Moving from working session-wide score or leaderboard fanout into deeper scoring and question-progression behavior
+- Moving from working internal question progression into deeper scoring and transport-visible progression behavior
 - Keeping scoring behavior and answer-result mapping behind the established interfaces while the implementations deepen, while expanding the existing harness instead of replacing it
 
 ## Next Recommended Steps
 
 1. Deepen scoring behavior behind the current `ScoringService` seam.
-2. Add real question progression instead of keeping the scaffold pinned to one active question.
+2. Surface progression changes to connected clients through the transport boundary.
 3. Expand the integration harness with duplicate and late-answer scenarios.
-4. Keep the session-wide fanout, closed-phase rejection, and wrong-question rejection paths covered as scoring behavior changes.
+4. Keep the session-wide fanout, phase rejection, and wrong-question rejection paths covered as scoring behavior changes.
 5. Keep the unit and integration suites separate as coverage grows.
 6. Keep `docs/ai-usage/` updated as work lands in commits.
 
@@ -176,6 +181,7 @@ Intentional deferrals:
 - answer submissions now reject whenever the session phase is not `question_open`
 - session snapshots and join or reconnect payloads now carry `currentQuestionId`
 - answer submissions now reject when the requested question does not match the active question reference
+- internal session progression can now close the current question, advance to the next question, and finish after the last question
 
 ## Current Guidance
 
@@ -184,7 +190,7 @@ Use the completed module contracts plus the stage-3 scaffold as the baseline. St
 ## Known Gaps
 
 - the current scoring behavior is intentionally stubbed and does not yet implement the final timing-based formula
-- real question progression is not implemented yet, so the active question remains pinned to the first quiz question in the current scaffold
+- progression changes are not yet emitted to connected clients through transport events
 - No richer observability hooks exist beyond the minimal health surface and app logging
 
 ## Current Module Focus
@@ -209,7 +215,7 @@ Any new session should start by reading:
 Tomorrow's intended entry point:
 
 - active focus: `stage 5 scoring and leaderboard implementation`
-- first unresolved topic: add real question progression for late-answer validation
+- first unresolved topic: emit progression changes to connected clients
 - next unresolved topics: deepen scoring behavior, add more answer rejection cases, and keep expanding the integration harness
 
 ## Verification History
@@ -236,3 +242,4 @@ Tomorrow's intended entry point:
 - Verified the session-update-fanout slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`
 - Verified the phase-aware rejection slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`
 - Verified the current-question-context slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`
+- Verified the question-progression slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`

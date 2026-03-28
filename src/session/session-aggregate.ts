@@ -5,12 +5,14 @@ export function buildSessionAggregate({
   participantRecords,
   quizId,
   sessionInstanceId,
+  phase,
   currentQuestionId,
 }: {
   existingSession: SessionAggregate | null;
   participantRecords: readonly ParticipantRecord[];
   quizId: string;
   sessionInstanceId: string;
+  phase: SessionAggregate["snapshot"]["phase"];
   currentQuestionId: string | null;
 }): SessionAggregate {
   return {
@@ -18,7 +20,7 @@ export function buildSessionAggregate({
       quizId,
       sessionInstanceId,
       status: "active",
-      phase: existingSession?.snapshot.phase ?? "question_open",
+      phase,
       currentQuestionId,
       version: (existingSession?.snapshot.version ?? 0) + 1,
       participants: participantRecords.map((participantRecord) => ({

@@ -9,7 +9,8 @@ import { createApp } from "../../src/app/create-app";
 import type { AppDependencies } from "../../src/app/dependencies";
 import type { QuizDefinition, QuizDefinitionSource } from "../../src/quiz-source/contracts";
 import { StubScoringService } from "../../src/scoring/stub-scoring-service";
-import type { SessionAggregate, SessionSnapshot } from "../../src/session/contracts";
+import type { SessionSnapshot } from "../../src/session/contracts";
+import { StubSessionProgressionService } from "../../src/session/stub-session-progression-service";
 import { StubQuizSessionService } from "../../src/session/stub-quiz-session-service";
 import { InMemorySessionStore } from "../../src/store/in-memory-session-store";
 import { DefaultTransportCommandHandler } from "../../src/transport/default-transport-command-handler";
@@ -487,11 +488,11 @@ test("headless integration harness rejects answers when the session phase is clo
     },
   });
 
-  const existingSession = await deps.sessionStore.getActiveSession("demo-quiz");
+  const closedSnapshot = await deps.progressionService.closeCurrentQuestion(
+    "demo-quiz",
+  );
 
-  assert.ok(existingSession);
-
-  await deps.sessionStore.saveSession(closeQuestionPhase(existingSession));
+  assert.equal(closedSnapshot.phase, "question_closed");
 
   const rejectedEvent = await aliceConnection.sendCommand({
     command: "answer.submit",
@@ -552,11 +553,18 @@ test("headless integration harness rejects answers for a non-active question", a
 
   assert.equal(joinedPayload.session.currentQuestionId, "question-1");
 
+  const advancedSnapshot = await deps.progressionService.advanceToNextQuestion(
+    "demo-quiz",
+  );
+
+  assert.equal(advancedSnapshot.phase, "question_open");
+  assert.equal(advancedSnapshot.currentQuestionId, "question-2");
+
   const rejectedEvent = await aliceConnection.sendCommand({
     command: "answer.submit",
     requestId: "req-answer-wrong-question",
     payload: {
-      questionId: "question-2",
+      questionId: "question-1",
       answer: "correct",
     },
   });
@@ -567,9 +575,32 @@ test("headless integration harness rejects answers for a non-active question", a
     payload: {
       code: "answer_rejected",
       message:
-        "Question question-2 is not the active question for quiz demo-quiz.",
+        "Question question-1 is not the active question for quiz demo-quiz.",
     },
   });
+
+  const acceptedEvents = await aliceConnection.sendCommandAndReadEvents(
+    {
+      command: "answer.submit",
+      requestId: "req-answer-current-question",
+      payload: {
+        questionId: "question-2",
+        answer: "correct",
+      },
+    },
+    2,
+  );
+
+  assert.equal(acceptedEvents.length, 2);
+  assertScoreEvent(
+    acceptedEvents[0]!,
+    "req-answer-current-question",
+    joinedPayload.self.participantId,
+    "demo-quiz",
+    100,
+    100,
+    "question-2",
+  );
 });
 
 class StaticQuizDefinitionSource implements QuizDefinitionSource {
@@ -711,6 +742,10 @@ function buildIntegrationDependencies(): AppDependencies {
       },
     },
   );
+  const progressionService = new StubSessionProgressionService(
+    sessionStore,
+    quizDefinitionSource,
+  );
   const scoringService = new StubScoringService();
   const answerSubmissionService = new StubAnswerSubmissionService(
     sessionStore,
@@ -726,6 +761,7 @@ function buildIntegrationDependencies(): AppDependencies {
     quizDefinitionSource,
     sessionStore,
     sessionService,
+    progressionService,
     scoringService,
     answerSubmissionService,
     transportCommandHandler,
@@ -756,6 +792,7 @@ function assertScoreEvent(
   expectedQuizId: string,
   expectedScoreDelta: number,
   expectedTotalScore: number,
+  expectedQuestionId = "question-1",
 ): ParticipantScoreUpdatedPayload {
   assert.equal(event.event, "participant.score.updated");
   assert.equal(event.requestId, expectedRequestId);
@@ -765,7 +802,7 @@ function assertScoreEvent(
   assert.deepEqual(payload, {
     quizId: expectedQuizId,
     participantId: expectedParticipantId,
-    questionId: "question-1",
+    questionId: expectedQuestionId,
     scoreDelta: expectedScoreDelta,
     totalScore: expectedTotalScore,
   });
@@ -853,15 +890,4 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
-}
-
-function closeQuestionPhase(session: SessionAggregate): SessionAggregate {
-  return {
-    ...session,
-    snapshot: {
-      ...session.snapshot,
-      phase: "question_closed",
-      version: session.snapshot.version + 1,
-    },
-  };
 }

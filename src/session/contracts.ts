@@ -83,6 +83,11 @@ export interface QuizSessionService {
   getSessionSnapshot(quizId: string): Promise<SessionSnapshot | null>;
 }
 
+export interface SessionProgressionService {
+  closeCurrentQuestion(quizId: string): Promise<SessionSnapshot>;
+  advanceToNextQuestion(quizId: string): Promise<SessionSnapshot>;
+}
+
 export class SessionJoinRejectedError extends Error {
   constructor(message: string) {
     super(message);
@@ -94,5 +99,12 @@ export class SessionReconnectRejectedError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "SessionReconnectRejectedError";
+  }
+}
+
+export class SessionProgressionRejectedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "SessionProgressionRejectedError";
   }
 }
