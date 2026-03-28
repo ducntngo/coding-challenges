@@ -835,6 +835,131 @@ test("headless integration harness rejects late answers after advancement withou
   ]);
 });
 
+test("headless integration harness covers slower correct answers with deterministic timing", async (t) => {
+  let currentTimeMs = 1_000;
+  const deps = buildIntegrationDependencies({
+    now: () => currentTimeMs,
+  });
+  const app = createApp({
+    deps,
+    logger: false,
+  });
+  const clients: IntegrationTestClient[] = [];
+
+  t.after(async () => {
+    await Promise.allSettled(clients.map(async (client) => client.close()));
+    await app.close();
+  });
+
+  const address = await app.listen({
+    port: 0,
+    host: "127.0.0.1",
+  });
+  const wsUrl = buildWebSocketUrl(address, "/ws");
+  const [aliceConnection, bobConnection] = await Promise.all([
+    IntegrationTestClient.connect(wsUrl),
+    IntegrationTestClient.connect(wsUrl),
+  ]);
+
+  clients.push(aliceConnection, bobConnection);
+
+  const aliceJoinEvent = await aliceConnection.sendCommand({
+    command: "session.join",
+    requestId: "req-join-slower-alice",
+    payload: {
+      quizId: "demo-quiz",
+      displayName: "Alice",
+    },
+  });
+  const bobJoinEvent = await bobConnection.sendCommand({
+    command: "session.join",
+    requestId: "req-join-slower-bob",
+    payload: {
+      quizId: "demo-quiz",
+      displayName: "Bob",
+    },
+  });
+
+  const aliceJoinPayload = assertSessionEvent(
+    aliceJoinEvent,
+    "session.joined",
+    "demo-quiz",
+    1,
+  );
+  const bobJoinPayload = assertSessionEvent(
+    bobJoinEvent,
+    "session.joined",
+    "demo-quiz",
+    2,
+  );
+
+  currentTimeMs = 16_000;
+
+  const [aliceAnswerEvents, bobFanoutEvents] = await Promise.all([
+    aliceConnection.sendCommandAndReadEvents(
+      {
+        command: "answer.submit",
+        requestId: "req-answer-slower-alice",
+        payload: {
+          questionId: "question-1",
+          answer: "correct",
+        },
+      },
+      2,
+    ),
+    bobConnection.readEvents(2),
+  ]);
+
+  assert.equal(aliceAnswerEvents.length, 2);
+  assert.equal(bobFanoutEvents.length, 2);
+
+  assertScoreEvent(
+    aliceAnswerEvents[0]!,
+    "req-answer-slower-alice",
+    aliceJoinPayload.self.participantId,
+    "demo-quiz",
+    64,
+    64,
+  );
+  const aliceLeaderboardEvent = assertLeaderboardEvent(
+    aliceAnswerEvents[1]!,
+    "req-answer-slower-alice",
+    "demo-quiz",
+  );
+  assertScoreEvent(
+    bobFanoutEvents[0]!,
+    undefined,
+    aliceJoinPayload.self.participantId,
+    "demo-quiz",
+    64,
+    64,
+  );
+  const bobLeaderboardEvent = assertLeaderboardEvent(
+    bobFanoutEvents[1]!,
+    undefined,
+    "demo-quiz",
+  );
+
+  assert.deepEqual(aliceLeaderboardEvent.leaderboard, [
+    {
+      participantId: aliceJoinPayload.self.participantId,
+      displayName: "Alice",
+      score: 64,
+      rank: 1,
+    },
+    {
+      participantId: bobJoinPayload.self.participantId,
+      displayName: "Bob",
+      score: 0,
+      rank: 2,
+    },
+  ]);
+  assert.deepEqual(
+    bobLeaderboardEvent.leaderboard,
+    aliceLeaderboardEvent.leaderboard,
+  );
+});
+
 class StaticQuizDefinitionSource implements QuizDefinitionSource {
   private readonly quizzes: Map<string, QuizDefinition>;
 
@@ -976,7 +1101,11 @@ class IntegrationTestClient {
   }
 }
 
-function buildIntegrationDependencies(): AppDependencies {
+function buildIntegrationDependencies(
+  options: {
+    now?: () => number;
+  } = {},
+): AppDependencies {
   const quizDefinitionSource = new StaticQuizDefinitionSource([
     {
       quizId: "demo-quiz",
@@ -1014,6 +1143,7 @@ function buildIntegrationDependencies(): AppDependencies {
   let generatedParticipantId = 0;
   let generatedReconnectToken = 0;
   let generatedSessionId = 0;
+  const now = options.now ?? Date.now;
   const sessionService = new StubQuizSessionService(
     sessionStore,
     quizDefinitionSource,
@@ -1030,18 +1160,21 @@ function buildIntegrationDependencies(): AppDependencies {
         generatedSessionId += 1;
         return `session-generated-${generatedSessionId}`;
       },
+      now,
     },
   );
   const progressionService = new StubSessionProgressionService(
     sessionStore,
     quizDefinitionSource,
     sessionProgressionNotifier,
+    now,
   );
   const scoringService = new StubScoringService();
   const answerSubmissionService = new StubAnswerSubmissionService(
     sessionStore,
     quizDefinitionSource,
     scoringService,
+    now,
   );
   const transportCommandHandler = new DefaultTransportCommandHandler({
     sessionService,

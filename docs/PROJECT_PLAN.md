@@ -74,7 +74,7 @@ Within layer 2, the implementation sequence should be:
 | 3. Select stack, add CI, and scaffold interfaces | Completed | The selected stack, lightweight CI, onboarding script, source tree, interface seams, in-memory or mocked adapters, and initial guard-rail tests are now in place. |
 | 4. Add guard-rail tests and participation skeleton | Completed | Join, reconnect, disconnect, the first accepted `answer.submit` path, and the early headless integration harness are now in place behind the established interfaces. |
 | 5. Implement scoring and leaderboard flow | Completed | Accepted answer handling emits session-wide score and leaderboard updates to the active connections in the same quiz session, non-open phases reject answers, snapshots carry the active question reference, internal progression advances that question, progression changes fan out transport-visible `session.snapshot` updates, the harness proves duplicate and late rejections stay connection-local, correctness comes from quiz-definition answer data, and the score seam applies a simple server-observed linear timing formula. |
-| 6. Strengthen tests, demo flow, and observability hooks | In progress | The headless harness now covers multi-session fanout plus late-answer rejection after progression. Next expand deterministic slower-answer coverage, improve the local multi-client demo path, and add lightweight logging plus developer run instructions. |
+| 6. Strengthen tests, demo flow, and observability hooks | In progress | The headless harness now covers multi-session fanout, late-answer rejection after progression, and deterministic slower-answer scoring through the real transport boundary. Next improve the local multi-client demo path, add lightweight logging plus developer run instructions, and keep submission polish moving. |
 | 7. Finalize submission package | Pending | Final docs, AI collaboration summary, architecture diagram, and video preparation notes. |
 
 ## Stage Exit Criteria
@@ -124,23 +124,22 @@ Current stage: `6. Strengthen tests, demo flow, and observability hooks`
 
 Immediate next outputs:
 
-- expand the headless integration harness with a deterministic slower-answer scoring case through the real transport boundary
-- keep the simple linear scoring baseline behind the existing seams and avoid transport changes unless a real gap appears
 - improve the local multi-client demo path and document the current reviewer-facing run flow
 - add lightweight observability hooks that help explain the session lifecycle during the demo
+- keep the simple linear scoring baseline behind the existing seams and avoid transport changes unless a real gap appears
 - keep `docs/IMPLEMENTATION_STATUS.md` aligned with the current implementation stage
 
 ## Current Next Steps
 
-1. Add a deterministic slower-answer scoring case to the existing headless integration harness now that the linear score baseline exists.
-2. Keep the simple linear score formula behind the `ScoringService` interface and avoid widening transport for more scoring detail unless required.
-3. Improve local demo and run instructions so a reviewer can exercise the current real-time flow without rediscovery.
-4. Add lightweight observability hooks around joins, progression, accepted answers, and rejections.
-5. Keep the `session.snapshot`, session-wide score fanout, duplicate rejection, phase rejection, wrong-question rejection, and late-answer rejection paths covered as tests deepen.
+1. Improve local demo and run instructions so a reviewer can exercise the current real-time flow without rediscovery.
+2. Add lightweight observability hooks around joins, progression, accepted answers, and rejections.
+3. Keep the simple linear score formula behind the `ScoringService` interface and avoid widening transport for more scoring detail unless required.
+4. Keep the `session.snapshot`, session-wide score fanout, duplicate rejection, phase rejection, wrong-question rejection, late-answer rejection, and slower-answer scoring paths covered as tests deepen.
+5. Start tightening the reviewer-facing submission flow once the demo and logs are in place.
 
 ## Resume Point
 
-The next session should resume just after the stage-5 scoring and leaderboard flow completes on the current branch stack.
+The next session should resume just after the first deterministic slower-answer stage-6 hardening slice.
 
 Read in this order:
 
@@ -159,7 +158,7 @@ Resume with these implementation decisions first:
 
 - expand the existing headless integration harness instead of creating a separate one-off test path
 - keep the current simple linear scoring policy behind the existing interfaces unless a concrete bug forces a change
-- keep progression fanout on `session.snapshot` and use it to deepen slower-answer and late-answer coverage before touching transport
+- keep progression fanout on `session.snapshot` and the deterministic harness clock as the preferred way to deepen real transport coverage before touching transport
 - keep the current join, reconnect, and accepted-answer payload shapes stable unless there is a strong reason to change them
 
 After the first full pass through the design docs:
