@@ -70,7 +70,7 @@ Within layer 2, the implementation sequence should be:
 | 1. Refine design boundary and execution plan | Completed | Solution scope, execution sequence, and design workflow are now explicit. |
 | 2. Define architecture and module contracts | Completed | Architecture baseline, stable first-pass module contracts, and the open-question review are complete. No remaining architecture blocker currently prevents stack selection. |
 | 3. Select stack, add CI, and scaffold interfaces | Completed | The selected stack, lightweight CI, onboarding script, source tree, interface seams, in-memory or mocked adapters, and initial guard-rail tests are now in place. |
-| 4. Add guard-rail tests and participation skeleton | In progress | The first tests exist. Next deepen the usable participation flow behind the scaffolded interfaces, starting with session join and connection binding. |
+| 4. Add guard-rail tests and participation skeleton | In progress | The join and connection-binding slice is now in place. Next deepen reconnect, disconnect, and answer-submission behavior behind the same interfaces. |
 | 5. Implement scoring and leaderboard flow | Pending | Deepen the stubbed scoring, ranking, and live update paths without breaking the established interfaces or guard-rail tests. |
 | 6. Strengthen tests, demo flow, and observability hooks | Pending | Expand tests, improve the local multi-client demo path, and add logging plus developer run instructions. |
 | 7. Finalize submission package | Pending | Final docs, AI collaboration summary, architecture diagram, and video preparation notes. |
@@ -121,23 +121,23 @@ Current stage: `4. Add guard-rail tests and participation skeleton`
 
 Immediate next outputs:
 
-- implement the first usable `session.join` flow behind the scaffolded interfaces
-- bind successful joins to the connection context and emit the first success acknowledgement path
-- expand tests around join success, join rejection, and bound-connection behavior
+- implement `session.reconnect` behind the scaffolded interfaces
+- forward disconnect handling safely through the session boundary
+- expand tests around reconnect success, invalid reconnect rejection, and disconnect behavior
 - keep the transport adapter thin while session behavior starts to deepen
 - keep `docs/IMPLEMENTATION_STATUS.md` aligned with the current implementation stage
 
 ## Current Next Steps
 
-1. Implement `joinSession` behind the existing session and store interfaces.
-2. Map `session.join` to a successful transport acknowledgement plus the current snapshot.
-3. Bind the connection context on successful join and cover that with tests.
-4. Implement `session.reconnect` behind the same interfaces.
-5. Add disconnect handling and the next transport guard-rail tests.
+1. Implement `session.reconnect` behind the existing session and store interfaces.
+2. Map reconnect outcomes to success or rejection events without thickening the transport layer.
+3. Forward disconnect handling and make stale disconnects safe.
+4. Add transport and session tests around reconnect and disconnect flows.
+5. Start the first accepted `answer.submit` path behind the established seams.
 
 ## Resume Point
 
-The next session should resume with the first real participation slice behind the stage-3 scaffold.
+The next session should resume just after the first working join slice behind the stage-3 scaffold.
 
 Read in this order:
 
@@ -154,10 +154,10 @@ Read in this order:
 
 Resume with these implementation decisions first:
 
-- implement the first accepted `session.join` path
-- finalize the first join success payload shape
-- update connection binding after join succeeds
-- expand the guard-rail test set around the participation boundary
+- implement `session.reconnect`
+- define stale-disconnect-safe connection release behavior
+- expand the guard-rail test set around reconnect and disconnect handling
+- keep the current join payload shape stable unless there is a strong reason to change it
 
 After the first full pass through the design docs:
 

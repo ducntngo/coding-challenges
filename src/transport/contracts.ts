@@ -48,6 +48,40 @@ export interface CommandRejectedPayload {
   readonly message: string;
 }
 
+export interface SessionJoinPayload {
+  readonly quizId: string;
+  readonly displayName?: string;
+}
+
+export interface TransportSessionView {
+  readonly session: {
+    readonly quizId: string;
+    readonly sessionInstanceId: string;
+    readonly status: string;
+    readonly phase: string;
+    readonly version: number;
+  };
+  readonly self: {
+    readonly participantId: string;
+    readonly displayName: string | null;
+    readonly state: string;
+    readonly score: number;
+    readonly reconnectToken: string;
+  };
+  readonly participants: readonly {
+    readonly participantId: string;
+    readonly displayName: string | null;
+    readonly state: string;
+    readonly score: number;
+  }[];
+  readonly leaderboard: readonly {
+    readonly participantId: string;
+    readonly displayName: string | null;
+    readonly score: number;
+    readonly rank: number;
+  }[];
+}
+
 export function isKnownInboundCommand(
   command: string,
 ): command is InboundCommandName {

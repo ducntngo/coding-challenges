@@ -1,4 +1,5 @@
 import type { QuizSessionService } from "../session/contracts";
+import { SessionJoinRejectedError } from "../session/contracts";
 import type { ScoringService } from "../scoring/contracts";
 import type { ConnectionContext } from "./connection-context";
 import {
@@ -6,6 +7,8 @@ import {
   type CommandRejectedPayload,
   type InboundCommandEnvelope,
   type OutboundEventEnvelope,
+  type SessionJoinPayload,
+  type TransportSessionView,
   type TransportErrorCode,
 } from "./contracts";
 import type { TransportCommandHandler } from "./transport-command-handler";
@@ -22,8 +25,6 @@ export class DefaultTransportCommandHandler implements TransportCommandHandler {
     ctx: ConnectionContext,
     rawMessage: string,
   ): Promise<OutboundEventEnvelope[]> {
-    void this.deps;
-
     const parsed = parseInboundEnvelope(rawMessage);
 
     if (!parsed.ok) {
@@ -64,6 +65,50 @@ export class DefaultTransportCommandHandler implements TransportCommandHandler {
           `${envelope.command} is only allowed before a connection is bound.`,
         ),
       ];
+    }
+
+    if (envelope.command === "session.join") {
+      const payload = validateSessionJoinPayload(envelope.payload);
+
+      if (!payload.ok) {
+        return [
+          buildRejectedEvent(envelope.requestId, "invalid_payload", payload.message),
+        ];
+      }
+
+      try {
+        const result = await this.deps.sessionService.joinSession({
+          quizId: payload.value.quizId,
+          ...(payload.value.displayName !== undefined
+            ? { displayName: payload.value.displayName }
+            : {}),
+          connectionId: ctx.connectionId,
+        });
+
+        ctx.state = "bound";
+        ctx.quizId = result.snapshot.quizId;
+        ctx.participantId = result.self.participantId;
+
+        return [
+          {
+            event: "session.joined",
+            ...(envelope.requestId ? { requestId: envelope.requestId } : {}),
+            payload: buildTransportSessionView(result),
+          },
+        ];
+      } catch (error) {
+        if (error instanceof SessionJoinRejectedError) {
+          return [
+            buildRejectedEvent(
+              envelope.requestId,
+              "join_rejected",
+              error.message,
+            ),
+          ];
+        }
+
+        throw error;
+      }
     }
 
     return [
@@ -139,6 +184,82 @@ function parseInboundEnvelope(
         : {}),
       payload: candidate.payload,
     },
+  };
+}
+
+function validateSessionJoinPayload(
+  payload: unknown,
+):
+  | { ok: true; value: SessionJoinPayload }
+  | { ok: false; message: string } {
+  if (!payload || typeof payload !== "object") {
+    return {
+      ok: false,
+      message: "session.join payload must be a JSON object.",
+    };
+  }
+
+  const candidate = payload as Record<string, unknown>;
+
+  if (typeof candidate.quizId !== "string" || candidate.quizId.trim() === "") {
+    return {
+      ok: false,
+      message: "session.join payload must include a non-empty quizId.",
+    };
+  }
+
+  if (
+    "displayName" in candidate &&
+    candidate.displayName !== undefined &&
+    typeof candidate.displayName !== "string"
+  ) {
+    return {
+      ok: false,
+      message: "displayName must be a string when it is provided.",
+    };
+  }
+
+  if (
+    typeof candidate.displayName === "string" &&
+    candidate.displayName.trim().length > 40
+  ) {
+    return {
+      ok: false,
+      message: "displayName must be 40 characters or fewer.",
+    };
+  }
+
+  return {
+    ok: true,
+    value: {
+      quizId: candidate.quizId.trim(),
+      ...(typeof candidate.displayName === "string"
+        ? { displayName: candidate.displayName }
+        : {}),
+    },
+  };
+}
+
+function buildTransportSessionView(
+  result: Awaited<ReturnType<QuizSessionService["joinSession"]>>,
+): TransportSessionView {
+  return {
+    session: {
+      quizId: result.snapshot.quizId,
+      sessionInstanceId: result.snapshot.sessionInstanceId,
+      status: result.snapshot.status,
+      phase: result.snapshot.phase,
+      version: result.snapshot.version,
+    },
+    self: {
+      participantId: result.self.participantId,
+      displayName: result.self.displayName,
+      state: result.self.state,
+      score: result.self.score,
+      reconnectToken: result.self.reconnectToken,
+    },
+    participants: result.snapshot.participants,
+    leaderboard: result.snapshot.leaderboard,
   };
 }
 
