@@ -111,7 +111,7 @@ After a rejected submission:
 - do not let persistence concerns dictate the scoring interface
 - prefer result objects that are easy to unit test and easy for transport to map into events
 
-In a real deployment, accepted-answer results and leaderboard changes would often also be copied into longer-lived storage and analytics systems. That might mean an operational database for auditability and replay, plus a warehouse such as BigQuery for aggregate analysis. Those integrations should remain downstream consumers of this module's outputs rather than drivers of its core scoring policy.
+In a real deployment, accepted-answer results and leaderboard changes would often also be copied into longer-lived storage and analytics systems. That might mean an operational SQL database for auditability, replay, and live leaderboard retrieval, plus a warehouse such as BigQuery for aggregate analysis. BigQuery or a similar warehouse should be treated as a downstream analytics sink rather than the serving path for live leaderboard reads. If the architecture grows beyond a single process, score aggregation and ranking updates would ideally be fanned out through a near-real-time stream or queue consumer, such as Kafka or an equivalent managed event backbone, while the serving-side leaderboard state remains in an operational read model.
 
 ## Suggested Interface Shape
 

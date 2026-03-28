@@ -3,6 +3,11 @@ import { randomUUID } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import WebSocket, { type RawData } from "ws";
 
+import {
+  buildProgressionDispatchLogEvent,
+  buildTransportRuntimeLogEvents,
+  extractInboundCommandSummary,
+} from "../observability/runtime-log-events";
 import type { SessionAggregate } from "../session/contracts";
 import type { SessionProgressionNotifier } from "../session/session-progression-events";
 import type { ConnectionContext } from "./connection-context";
@@ -27,7 +32,16 @@ export function registerTransportRoutes(
   const unsubscribeFromProgressionUpdates =
     deps.sessionProgressionNotifier.subscribe((event) => {
       try {
-        dispatchProgressionSnapshot(connectionRegistry, event.session);
+        const recipientCount = dispatchProgressionSnapshot(
+          connectionRegistry,
+          event.session,
+        );
+        const logEvent = buildProgressionDispatchLogEvent({
+          session: event.session,
+          recipientCount,
+        });
+
+        app.log.info(logEvent.fields, logEvent.message);
       } catch (error) {
         app.log.error(
           {
@@ -60,6 +74,7 @@ export function registerTransportRoutes(
     socket.on("message", async (buffer: RawData) => {
       const rawMessage =
         typeof buffer === "string" ? buffer : buffer.toString("utf8");
+      const inbound = extractInboundCommandSummary(rawMessage);
 
       try {
         const events = await deps.transportCommandHandler.handleMessage(
@@ -68,6 +83,25 @@ export function registerTransportRoutes(
         );
 
         registerCurrentConnection(connectionRegistry, ctx, events, sendToSocket);
+        const logEvents = buildTransportRuntimeLogEvents({
+          connectionId: ctx.connectionId,
+          ...(ctx.quizId !== undefined ? { quizId: ctx.quizId } : {}),
+          ...(ctx.participantId !== undefined
+            ? { participantId: ctx.participantId }
+            : {}),
+          inbound,
+          events,
+        });
+
+        for (const logEvent of logEvents) {
+          if (logEvent.level === "warn") {
+            app.log.warn(logEvent.fields, logEvent.message);
+            continue;
+          }
+
+          app.log.info(logEvent.fields, logEvent.message);
+        }
+
         dispatchOutboundEvents(connectionRegistry, ctx, events, sendToSocket);
       } catch (error) {
         app.log.error({ err: error, connectionId: ctx.connectionId }, "transport handler failed");
@@ -209,8 +243,9 @@ function withoutRequestId(
 function dispatchProgressionSnapshot(
   connectionRegistry: SessionConnectionRegistry,
   session: SessionAggregate,
-): void {
+): number {
   const recipients = connectionRegistry.getSessionConnections(session.snapshot.quizId);
+  let recipientCount = 0;
 
   for (const recipient of recipients) {
     const payload = buildTransportSessionViewFromSession(
@@ -226,5 +261,8 @@ function dispatchProgressionSnapshot(
       event: "session.snapshot",
       payload: payload satisfies SessionSnapshotPayload,
     });
+    recipientCount += 1;
   }
+
+  return recipientCount;
 }

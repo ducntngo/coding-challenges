@@ -8,7 +8,7 @@ This file is active and should be kept current through implementation and verifi
 
 ## Current Snapshot
 
-Repository state is now in stage 6 hardening. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The real participation flow is in place for `session.join`, `session.reconnect`, disconnect forwarding, accepted `answer.submit`, internal question progression, and transport-visible `session.snapshot` fanout when progression changes session state. The current scoring seam resolves correctness from quiz-definition answer data and applies a simple server-observed linear timing formula backed by question-open timestamps in session state. The headless WebSocket integration harness now covers concurrent sessions, session-wide score or leaderboard fanout, duplicate-answer rejection without passive fanout, closed-phase answer rejection with progression snapshots, wrong-question rejection using explicit current-question context, late-answer rejection after progression without passive fanout, and deterministic slower-answer scoring through the real transport boundary. The next step is to keep stage 6 moving with demo-flow and observability hardening.
+Repository state is now just past stage 6 and into submission packaging. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The real participation flow is in place for `session.join`, `session.reconnect`, disconnect forwarding, accepted `answer.submit`, internal question progression, and transport-visible `session.snapshot` fanout when progression changes session state. The current scoring seam resolves correctness from quiz-definition answer data and applies a simple server-observed linear timing formula backed by question-open timestamps in session state. The headless WebSocket integration harness covers concurrent sessions, session-wide score or leaderboard fanout, duplicate-answer rejection without passive fanout, closed-phase answer rejection with progression snapshots, wrong-question rejection using explicit current-question context, late-answer rejection after progression without passive fanout, and deterministic slower-answer scoring through the real transport boundary. The runtime now also emits lightweight structured logs around joins, reconnects, accepted answers, rejections, leaderboard updates, and progression snapshot fanout, and the reviewer-facing run flow is documented without adding a dedicated frontend. The next step is to tighten the submission narrative rather than deepen the runtime surface.
 
 ## Completed
 
@@ -106,19 +106,24 @@ Repository state is now in stage 6 hardening. The design baseline is stable, the
 - Expanded the headless integration harness with a deterministic slower-answer scoring case through the real WebSocket transport boundary
 - Added a harness-local clock seam so the integration flow can exercise score decay deterministically without widening the runtime transport contract
 - Verified the slow-answer-harness slice locally with `npm run typecheck`, `npm test`, and `npm run build`
+- Added a pure runtime log-event helper and unit coverage for join, rejection, accepted-answer, leaderboard-update, and progression fanout log summaries
+- Added lightweight structured logs around transport outcomes and progression snapshot fanout without widening the runtime transport contract
+- Added a reviewer-facing demo-flow document for local server startup, health verification, automated harness execution, and a minimal manual WebSocket walkthrough
+- Refined the scoring design notes so operational SQL or read-model storage serves live leaderboards while warehouses like BigQuery stay downstream analytics sinks
+- Verified the demo-flow-and-observability slice locally with `npm run typecheck`, `npm test`, and `npm run build`
 
 ## In Progress
 
-- Moving through stage-6 hardening around reviewer demo flow and lightweight observability now that deterministic slower-answer coverage exists
-- Keeping scoring behavior and answer-result mapping behind the established interfaces while the existing harness grows instead of being replaced
+- Moving into stage-7 submission packaging now that the stage-6 hardening work is complete
+- Tightening the final reviewer story across docs, architecture notes, and AI collaboration artifacts instead of widening runtime scope
 
 ## Next Recommended Steps
 
-1. Improve the local multi-client demo path and reviewer-facing run instructions.
-2. Add lightweight observability hooks around joins, progression, accepted answers, and rejections.
-3. Keep the simple linear scoring baseline stable while the demo and observability slices deepen.
-4. Keep the unit and integration suites separate as coverage grows.
-5. Keep `docs/ai-usage/` updated as work lands in commits.
+1. Tighten the final submission docs and walkthrough order now that the runtime behavior is stable.
+2. Prepare the final AI collaboration summary from the existing commit-oriented diary entries.
+3. Review architecture, tradeoff, and module docs for a clean interviewer walkthrough.
+4. Keep the current simple linear scoring baseline and transport payloads stable unless a concrete bug appears.
+5. Keep the unit and integration suites as the authoritative verification baseline during packaging.
 
 ## Open Decisions
 
@@ -207,6 +212,8 @@ Intentional deferrals:
 - internal session progression now fans out `session.snapshot` updates to the active connections in the same quiz session
 - scoring correctness is now resolved from quiz-definition accepted answers instead of a hard-coded scoring sentinel
 - the current default score policy uses server-observed question-open and answer-receive timestamps, with a short full-score grace window followed by linear decay to a positive floor
+- the current observability baseline logs summary-level join, reconnect, rejection, accepted-answer, leaderboard-update, and progression-snapshot outcomes at the existing transport and progression seams
+- the current reviewer demo path is docs-driven, centered on `npm run dev`, `GET /health`, `npm run test:integration`, and a minimal manual WebSocket walkthrough rather than a dedicated client app
 
 ## Current Guidance
 
@@ -216,11 +223,12 @@ Use the completed module contracts plus the stage-3 scaffold as the baseline. St
 
 - the current scoring behavior now uses an intentionally simple linear timing model, but the constants are still lightweight challenge defaults rather than a deeply tuned formula
 - progression is visible through transport snapshots, but there is still no host-facing progression command in the current scaffold
-- No richer observability hooks exist beyond the minimal health surface and app logging
+- the current reviewer demo path is still docs-driven and browser-console-based rather than a dedicated demo client
+- the current observability surface is intentionally lightweight and does not include a metrics backend, tracing system, or production log aggregation in code
 
 ## Current Module Focus
 
-- Active focus: `stage 6 test, demo, and observability hardening`
+- Active focus: `stage 7 submission packaging`
 
 ## Handoff Notes
 
@@ -235,13 +243,14 @@ Any new session should start by reading:
 7. `docs/modules/realtime-transport.md`
 8. `docs/modules/scoring-and-leaderboard.md`
 9. `docs/modules/observability-and-operations.md`
-10. `scripts/bootstrap.sh`
+10. `docs/implementation/06-demo-flow.md`
+11. `scripts/bootstrap.sh`
 
 Tomorrow's intended entry point:
 
-- active focus: `stage 6 test, demo, and observability hardening`
-- first unresolved topic: improve the demo flow and reviewer-facing run instructions
-- next unresolved topics: add lightweight observability while preserving the current linear scoring baseline
+- active focus: `stage 7 submission packaging`
+- first unresolved topic: tighten the final reviewer walkthrough and submission-facing documentation
+- next unresolved topics: synthesize the AI diary trail and verify final doc consistency
 
 ## Verification History
 

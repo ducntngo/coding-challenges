@@ -74,8 +74,8 @@ Within layer 2, the implementation sequence should be:
 | 3. Select stack, add CI, and scaffold interfaces | Completed | The selected stack, lightweight CI, onboarding script, source tree, interface seams, in-memory or mocked adapters, and initial guard-rail tests are now in place. |
 | 4. Add guard-rail tests and participation skeleton | Completed | Join, reconnect, disconnect, the first accepted `answer.submit` path, and the early headless integration harness are now in place behind the established interfaces. |
 | 5. Implement scoring and leaderboard flow | Completed | Accepted answer handling emits session-wide score and leaderboard updates to the active connections in the same quiz session, non-open phases reject answers, snapshots carry the active question reference, internal progression advances that question, progression changes fan out transport-visible `session.snapshot` updates, the harness proves duplicate and late rejections stay connection-local, correctness comes from quiz-definition answer data, and the score seam applies a simple server-observed linear timing formula. |
-| 6. Strengthen tests, demo flow, and observability hooks | In progress | The headless harness now covers multi-session fanout, late-answer rejection after progression, and deterministic slower-answer scoring through the real transport boundary. Next improve the local multi-client demo path, add lightweight logging plus developer run instructions, and keep submission polish moving. |
-| 7. Finalize submission package | Pending | Final docs, AI collaboration summary, architecture diagram, and video preparation notes. |
+| 6. Strengthen tests, demo flow, and observability hooks | Completed | The headless harness now covers multi-session fanout, late-answer rejection after progression, and deterministic slower-answer scoring through the real transport boundary. The runtime emits lightweight structured logs around joins, rejections, accepted answers, leaderboard updates, and progression snapshot fanout, and the reviewer-facing run flow is now documented without adding a dedicated frontend. |
+| 7. Finalize submission package | In progress | Final docs, AI collaboration summary, architecture diagram, and video preparation notes. |
 
 ## Stage Exit Criteria
 
@@ -120,26 +120,26 @@ Within layer 2, the implementation sequence should be:
 
 ## Active Focus
 
-Current stage: `6. Strengthen tests, demo flow, and observability hooks`
+Current stage: `7. Finalize submission package`
 
 Immediate next outputs:
 
-- improve the local multi-client demo path and document the current reviewer-facing run flow
-- add lightweight observability hooks that help explain the session lifecycle during the demo
-- keep the simple linear scoring baseline behind the existing seams and avoid transport changes unless a real gap appears
+- tighten reviewer-facing run and submission docs around the now-stable implementation baseline
+- prepare the final AI collaboration summary from the commit-oriented diary entries
+- review the architecture diagram, tradeoffs, and walkthrough flow for submission clarity
 - keep `docs/IMPLEMENTATION_STATUS.md` aligned with the current implementation stage
 
 ## Current Next Steps
 
-1. Improve local demo and run instructions so a reviewer can exercise the current real-time flow without rediscovery.
-2. Add lightweight observability hooks around joins, progression, accepted answers, and rejections.
-3. Keep the simple linear score formula behind the `ScoringService` interface and avoid widening transport for more scoring detail unless required.
-4. Keep the `session.snapshot`, session-wide score fanout, duplicate rejection, phase rejection, wrong-question rejection, late-answer rejection, and slower-answer scoring paths covered as tests deepen.
-5. Start tightening the reviewer-facing submission flow once the demo and logs are in place.
+1. Tighten final reviewer documentation now that the run flow, logs, and integration harness are all in place.
+2. Prepare the final AI collaboration summary from the existing per-commit diary entries.
+3. Review the architecture, tradeoff, and module docs for final submission consistency instead of adding more runtime breadth.
+4. Keep the current simple linear scoring baseline and transport payloads stable unless a concrete submission bug appears.
+5. Preserve the existing unit and integration suites as the authoritative guard rails during submission polish.
 
 ## Resume Point
 
-The next session should resume just after the first deterministic slower-answer stage-6 hardening slice.
+The next session should resume just after the stage-6 close-out slice that added the lightweight observability baseline and reviewer-facing demo flow.
 
 Read in this order:
 
@@ -148,18 +148,19 @@ Read in this order:
 3. `docs/ARCHITECTURE_PRINCIPLES.md`
 4. `docs/architecture/logs/2026-03-28-03-stack-selection.md`
 5. `docs/architecture/logs/2026-03-28-02-open-question-review.md`
-6. `docs/modules/MODULE_DESIGN_PLAN.md`
-7. `docs/modules/quiz-session.md`
-8. `docs/modules/realtime-transport.md`
-9. `docs/modules/scoring-and-leaderboard.md`
-10. `docs/modules/observability-and-operations.md`
+6. `docs/implementation/06-demo-flow.md`
+7. `docs/modules/MODULE_DESIGN_PLAN.md`
+8. `docs/modules/quiz-session.md`
+9. `docs/modules/realtime-transport.md`
+10. `docs/modules/scoring-and-leaderboard.md`
+11. `docs/modules/observability-and-operations.md`
 
 Resume with these implementation decisions first:
 
-- expand the existing headless integration harness instead of creating a separate one-off test path
-- keep the current simple linear scoring policy behind the existing interfaces unless a concrete bug forces a change
-- keep progression fanout on `session.snapshot` and the deterministic harness clock as the preferred way to deepen real transport coverage before touching transport
-- keep the current join, reconnect, and accepted-answer payload shapes stable unless there is a strong reason to change them
+- treat the current implementation as stable enough for submission packaging rather than deeper feature work
+- keep the current simple linear scoring policy and transport payloads stable unless a concrete bug forces a change
+- use the existing headless integration harness and reviewer demo doc as the canonical walkthrough assets
+- prefer doc tightening, narrative coherence, and final review over adding new runtime breadth
 
 After the first full pass through the design docs:
 
