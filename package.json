@@ -10,6 +10,8 @@
     "bootstrap": "bash scripts/bootstrap.sh",
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsx watch src/index.ts",
+    "simulate:game": "node --import tsx scripts/simulate-game.ts",
+    "simulate:random-game": "node --import tsx scripts/simulate-random-game.ts",
     "start": "node dist/index.js",
     "test": "npm run test:unit && npm run test:integration",
     "test:unit": "node --import tsx --test test/unit/**/*.test.ts",

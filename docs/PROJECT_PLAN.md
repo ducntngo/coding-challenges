@@ -75,7 +75,7 @@ Within layer 2, the implementation sequence should be:
 | 4. Add guard-rail tests and participation skeleton | Completed | Join, reconnect, disconnect, the first accepted `answer.submit` path, and the early headless integration harness are now in place behind the established interfaces. |
 | 5. Implement scoring and leaderboard flow | Completed | Accepted answer handling emits session-wide score and leaderboard updates to the active connections in the same quiz session, non-open phases reject answers, snapshots carry the active question reference, internal progression advances that question, progression changes fan out transport-visible `session.snapshot` updates, the harness proves duplicate and late rejections stay connection-local, correctness comes from quiz-definition answer data, and the score seam applies a simple server-observed linear timing formula. |
 | 6. Strengthen tests, demo flow, and observability hooks | Completed | The headless harness now covers multi-session fanout, late-answer rejection after progression, and deterministic slower-answer scoring through the real transport boundary. The runtime emits lightweight structured logs around joins, rejections, accepted answers, leaderboard updates, and progression snapshot fanout, and the reviewer-facing run flow is now documented without adding a dedicated frontend. |
-| 7. Finalize submission package | In progress | Final docs, AI collaboration summary, architecture diagram, and video preparation notes. |
+| 7. Finalize submission package | Completed | The repo now has a reviewer-facing root README, a `submission/` bundle with an explicit system design summary and AI collaboration summary, a live-server simulation script for quick reviewer checks, an optional randomized local game simulator, and the underlying architecture, implementation, and AI diary docs linked from that package. |
 
 ## Stage Exit Criteria
 
@@ -116,7 +116,6 @@ Within layer 2, the implementation sequence should be:
 - docs and code tell one coherent story
 - AI usage is documented clearly
 - a reviewer can understand, run, and assess the solution quickly
-- the repository supports the final video walkthrough
 
 ## Active Focus
 
@@ -124,22 +123,23 @@ Current stage: `7. Finalize submission package`
 
 Immediate next outputs:
 
-- tighten reviewer-facing run and submission docs around the now-stable implementation baseline
-- prepare the final AI collaboration summary from the commit-oriented diary entries
-- review the architecture diagram, tradeoffs, and walkthrough flow for submission clarity
+- keep the final submission package stable
+- use the existing submission bundle and demo docs as the walkthrough spine
+- use the live-server simulation script for quick reviewer-path sanity checks
+- use the randomized local simulator when a human-readable multi-round walkthrough is more useful than the narrow reviewer shortcut
+- limit further changes to bug fixes or genuine clarity problems
 - keep `docs/IMPLEMENTATION_STATUS.md` aligned with the current implementation stage
 
 ## Current Next Steps
 
-1. Tighten final reviewer documentation now that the run flow, logs, and integration harness are all in place.
-2. Prepare the final AI collaboration summary from the existing per-commit diary entries.
-3. Review the architecture, tradeoff, and module docs for final submission consistency instead of adding more runtime breadth.
-4. Keep the current simple linear scoring baseline and transport payloads stable unless a concrete submission bug appears.
-5. Preserve the existing unit and integration suites as the authoritative guard rails during submission polish.
+1. Run one last smoke pass on Node.js `24.x` immediately before submission if needed.
+2. Keep the current simple linear scoring baseline and transport payloads stable unless a concrete submission bug appears.
+3. Preserve the new running-server simulation plus the existing unit and integration suites as the reviewer and correctness guard rails.
+4. Avoid widening scope now that the submission package is complete.
 
 ## Resume Point
 
-The next session should resume just after the stage-6 close-out slice that added the lightweight observability baseline and reviewer-facing demo flow.
+The next session should resume from the completed submission package.
 
 Read in this order:
 
@@ -148,19 +148,19 @@ Read in this order:
 3. `docs/ARCHITECTURE_PRINCIPLES.md`
 4. `docs/architecture/logs/2026-03-28-03-stack-selection.md`
 5. `docs/architecture/logs/2026-03-28-02-open-question-review.md`
-6. `docs/implementation/06-demo-flow.md`
-7. `docs/modules/MODULE_DESIGN_PLAN.md`
-8. `docs/modules/quiz-session.md`
-9. `docs/modules/realtime-transport.md`
-10. `docs/modules/scoring-and-leaderboard.md`
-11. `docs/modules/observability-and-operations.md`
+6. `submission/README.md`
+7. `submission/SYSTEM_DESIGN.md`
+8. `submission/AI_COLLABORATION.md`
+9. `docs/implementation/06-demo-flow.md`
 
 Resume with these implementation decisions first:
 
-- treat the current implementation as stable enough for submission packaging rather than deeper feature work
+- treat the repository as submission-ready unless a real bug or clarity issue is found
 - keep the current simple linear scoring policy and transport payloads stable unless a concrete bug forces a change
-- use the existing headless integration harness and reviewer demo doc as the canonical walkthrough assets
-- prefer doc tightening, narrative coherence, and final review over adding new runtime breadth
+- use the submission bundle and existing integration harness as the canonical walkthrough assets
+- use the live-server simulation script when a reviewer wants a quick check against `npm run dev`
+- use the randomized local simulator when you want a round-by-round leaderboard narrative without adding a host-facing command
+- prefer final smoke checks over further feature work
 
 After the first full pass through the design docs:
 
