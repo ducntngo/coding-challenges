@@ -8,7 +8,7 @@ This file is active and should be kept current through implementation and verifi
 
 ## Current Snapshot
 
-Repository state is now in early implementation. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The first real participation slices are now in place for `session.join`, `session.reconnect`, disconnect forwarding, accepted `answer.submit`, internal question progression, and transport-visible `session.snapshot` fanout when progression changes session state. The headless WebSocket integration harness now covers concurrent sessions, session-wide score or leaderboard fanout, closed-phase answer rejection with progression snapshots, and wrong-question rejection using explicit current-question context in the session snapshot. The next step is to deepen scoring behavior and add richer duplicate or late-answer coverage while keeping the same harness green.
+Repository state is now in early implementation. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The first real participation slices are now in place for `session.join`, `session.reconnect`, disconnect forwarding, accepted `answer.submit`, internal question progression, and transport-visible `session.snapshot` fanout when progression changes session state. The headless WebSocket integration harness now covers concurrent sessions, session-wide score or leaderboard fanout, duplicate-answer rejection without passive fanout, closed-phase answer rejection with progression snapshots, and wrong-question rejection using explicit current-question context in the session snapshot. The next step is to deepen scoring behavior and extend late-answer coverage while keeping the same harness green.
 
 ## Completed
 
@@ -87,17 +87,20 @@ Repository state is now in early implementation. The design baseline is stable, 
 - Added transport-side `session.snapshot` fanout so active connections receive updated session views when progression closes or advances a question
 - Added unit coverage for progression publication and integration coverage for `session.snapshot` delivery during closed-phase and next-question transitions
 - Verified the progression-snapshot-fanout slice locally with `npm run typecheck`, `npm test`, and `npm run build`
+- Expanded the headless integration harness with duplicate-answer rejection coverage at the real transport boundary
+- Added harness assertions that rejected answers remain connection-local and do not fan out to passive session participants
+- Verified the rejection-harness-coverage slice locally with `npm run test:integration`
 
 ## In Progress
 
-- Moving from transport-visible progression into deeper scoring behavior and richer duplicate or late-answer coverage
+- Moving from stronger rejection harness coverage into deeper scoring behavior and richer late-answer coverage
 - Keeping scoring behavior and answer-result mapping behind the established interfaces while the implementations deepen, while expanding the existing harness instead of replacing it
 
 ## Next Recommended Steps
 
 1. Deepen scoring behavior behind the current `ScoringService` seam.
-2. Expand the integration harness with duplicate and late-answer scenarios now that progression updates are emitted through `session.snapshot`.
-3. Keep the `session.snapshot`, session-wide score fanout, phase rejection, and wrong-question rejection paths covered as scoring behavior changes.
+2. Expand late-answer coverage further on top of the current duplicate, closed-phase, and wrong-question rejection scenarios.
+3. Keep the `session.snapshot`, session-wide score fanout, duplicate rejection, phase rejection, and wrong-question rejection paths covered as scoring behavior changes.
 4. Keep the unit and integration suites separate as coverage grows.
 5. Keep `docs/ai-usage/` updated as work lands in commits.
 
@@ -195,7 +198,7 @@ Use the completed module contracts plus the stage-3 scaffold as the baseline. St
 
 - the current scoring behavior is intentionally stubbed and does not yet implement the final timing-based formula
 - progression is visible through transport snapshots, but there is still no host-facing progression command in the current scaffold
-- duplicate and richer late-answer scenarios are not yet covered beyond the current wrong-question progression path
+- richer late-answer scenarios are not yet covered beyond the current closed-phase and wrong-question progression paths
 - No richer observability hooks exist beyond the minimal health surface and app logging
 
 ## Current Module Focus
@@ -221,7 +224,7 @@ Tomorrow's intended entry point:
 
 - active focus: `stage 5 scoring and leaderboard implementation`
 - first unresolved topic: deepen scoring behavior behind the `ScoringService` seam
-- next unresolved topics: add duplicate and late-answer scenarios, and preserve the new `session.snapshot` fanout path while scoring evolves
+- next unresolved topics: add richer late-answer scenarios, and preserve the new `session.snapshot` fanout path while scoring evolves
 
 ## Verification History
 
@@ -249,3 +252,4 @@ Tomorrow's intended entry point:
 - Verified the current-question-context slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`
 - Verified the question-progression slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`
 - Verified the progression-snapshot-fanout slice locally with `npm run typecheck`, `npm test`, and `npm run build`
+- Verified the rejection-harness-coverage slice locally with `npm run test:integration`

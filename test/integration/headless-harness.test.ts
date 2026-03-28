@@ -296,6 +296,27 @@ test("headless integration harness covers multiple players across concurrent ses
   assert.equal(carolScoreEvent.questionId, "question-1");
   assert.equal(danaScoreEvent.questionId, "question-1");
 
+  const duplicateRejectedEvent = await aliceConnection.sendCommand({
+    command: "answer.submit",
+    requestId: "req-answer-alice-duplicate",
+    payload: {
+      questionId: "question-1",
+      answer: "correct",
+    },
+  });
+
+  assert.deepEqual(duplicateRejectedEvent, {
+    event: "command.rejected",
+    requestId: "req-answer-alice-duplicate",
+    payload: {
+      code: "answer_rejected",
+      message:
+        `Participant ${aliceJoinPayload.self.participantId} already answered question question-1.`,
+    },
+  });
+
+  await bobConnection.expectNoEventWithin(75);
+
   const demoSnapshotAfterAnswer = await waitForSessionSnapshot(
     deps,
     "demo-quiz",
@@ -544,6 +565,8 @@ test("headless integration harness rejects answers when the session phase is clo
       message: "Answers are not being accepted in phase question_closed.",
     },
   });
+
+  await bobConnection.expectNoEventWithin(75);
 });
 
 test("headless integration harness rejects answers for a non-active question", async (t) => {
@@ -712,6 +735,43 @@ class IntegrationTestClient {
     }
 
     return events;
+  }
+
+  async expectNoEventWithin(timeoutMs: number): Promise<void> {
+    const queuedEvent = this.messageQueue.shift();
+
+    if (queuedEvent) {
+      throw new Error(
+        `Expected no event within ${timeoutMs}ms, but received ${JSON.stringify(queuedEvent)}.`,
+      );
+    }
+
+    await new Promise<void>((resolve, reject) => {
+      const waiter = (event: OutboundEventEnvelope) => {
+        cleanup();
+        reject(
+          new Error(
+            `Expected no event within ${timeoutMs}ms, but received ${JSON.stringify(event)}.`,
+          ),
+        );
+      };
+      const timeout = setTimeout(() => {
+        cleanup();
+        resolve();
+      }, timeoutMs);
+
+      const cleanup = () => {
+        clearTimeout(timeout);
+
+        const waiterIndex = this.waiters.indexOf(waiter);
+
+        if (waiterIndex >= 0) {
+          this.waiters.splice(waiterIndex, 1);
+        }
+      };
+
+      this.waiters.push(waiter);
+    });
   }
 
   async close(): Promise<void> {
