@@ -137,7 +137,7 @@ Measure elapsed time from server-recorded broadcast time to server-recorded subm
 
 ### Choice
 
-Start with an in-memory implementation behind a storage interface instead of requiring a shared database or coordination layer immediately.
+Start with an in-memory implementation behind a storage interface instead of requiring a shared durable store or coordination layer immediately.
 
 ### Chosen Direction
 
@@ -147,7 +147,7 @@ All session and participant state access goes through a clear interface. The fir
 
 - reduces implementation complexity for the challenge
 - keeps the domain model decoupled from storage details
-- supports a migration path to Redis, Postgres, or another scalable store later
+- supports a migration path to a scalable shared or durable store later
 
 ### Cost
 

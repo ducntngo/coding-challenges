@@ -19,6 +19,10 @@ Implement the backend real-time quiz server as the primary component. Mock the r
 - Keep the scope tightly aligned with the challenge acceptance criteria.
 - Prefer decisions that improve submission quality over extra product breadth.
 - Separate design decisions from implementation decisions so the stack is chosen only after the functional boundary is clear.
+- Once a module boundary is stable, document a short implementation handoff so a later agent can build with minimal rediscovery.
+- After the design pass is stable, move into interface-first scaffolding before deep implementation work.
+- Put all planned module seams in place early, using mocks or placeholders where downstream pieces are not ready yet.
+- Add bare-bones tests as soon as the seams exist so they act as guard rails while implementations deepen.
 - Treat the markdown docs as the planning surface and keep them synchronized with real progress.
 - Preserve a clear AI-collaboration trail through diary entries and status updates.
 
@@ -48,17 +52,25 @@ The project should progress in three layers:
 
 The immediate focus is still layer 1. The objective is to remove ambiguity before any code scaffold is chosen.
 
+Within layer 2, the implementation sequence should be:
+
+1. choose the stack after the design and open-question review are stable
+2. scaffold all core interfaces and module boundaries
+3. mock or stub not-yet-implemented dependencies so the seams are live early
+4. add skeletal tests around those seams as guard rails
+5. deepen module implementations behind the existing interfaces
+
 ## Work Stages
 
 | Stage | Status | Notes |
 | --- | --- | --- |
 | 0. Documentation and workflow setup | Completed | Governance docs, planning scaffold, AI diary rules, and repo workflow rules are in place. |
 | 1. Refine design boundary and execution plan | Completed | Solution scope, execution sequence, and design workflow are now explicit. |
-| 2. Define architecture and module contracts | In progress | Architecture baseline is defined; module contracts and domain/event details are next. |
-| 3. Select stack and scaffold project | Pending | Choose runtime, language, framework, and transport only after stage 2 is stable. |
-| 4. Implement participation flow | Pending | Connection lifecycle, join flow, session lookup or creation, and initial state broadcast. |
-| 5. Implement scoring and leaderboard flow | Pending | Answer handling, score changes, ranking, and live leaderboard updates. |
-| 6. Add tests, demo flow, and observability hooks | Pending | Unit tests, local multi-client demo path, logging, and developer run instructions. |
+| 2. Define architecture and module contracts | Completed | Architecture baseline, stable first-pass module contracts, and the open-question review are complete. No remaining architecture blocker currently prevents stack selection. |
+| 3. Select stack and scaffold interfaces | In progress | Choose runtime, language, framework, and transport, then scaffold all planned interfaces, mocks, and placeholder integrations. |
+| 4. Add guard-rail tests and participation skeleton | Pending | Add bare-bones tests around the scaffolded seams and implement the first usable participation flow behind the existing interfaces. |
+| 5. Implement scoring and leaderboard flow | Pending | Deepen the stubbed scoring, ranking, and live update paths without breaking the established interfaces or guard-rail tests. |
+| 6. Strengthen tests, demo flow, and observability hooks | Pending | Expand tests, improve the local multi-client demo path, and add logging plus developer run instructions. |
 | 7. Finalize submission package | Pending | Final docs, AI collaboration summary, architecture diagram, and video preparation notes. |
 
 ## Stage Exit Criteria
@@ -82,10 +94,13 @@ The immediate focus is still layer 1. The objective is to remove ambiguity befor
 
 - project structure exists and can host the planned implementation cleanly
 - stack choices are documented with rationale
-- the local run path is minimally functional
+- all planned module interfaces and composition seams are present
+- mocks or placeholder integrations exist for unfinished dependencies
+- the local run path is minimally functional at a scaffold level
 
 ### Stages 4 to 6 exit criteria
 
+- skeletal tests exist before deep implementation and continue to evolve with the modules
 - the real-time participation, scoring, and leaderboard flows are implemented
 - behavior is covered by targeted tests or explicit verification
 - the local demo path is reliable enough for walkthrough use
@@ -99,21 +114,58 @@ The immediate focus is still layer 1. The objective is to remove ambiguity befor
 
 ## Active Focus
 
-Current stage: `2. Define architecture and module contracts`
+Current stage: `3. Select stack and scaffold interfaces`
 
 Immediate next outputs:
 
-- expand module placeholders into stable module contracts
-- define the domain model and event protocol that connect the modules
+- choose the implementation stack
+- settle the small set of remaining interface-shape items that affect scaffolding
+- scaffold interfaces, mocks, and placeholder integrations
+- prepare skeletal tests as guard rails for the first implementation slice
 - keep `docs/IMPLEMENTATION_STATUS.md` aligned with the current design stage
-- begin with `docs/modules/quiz-session.md` as the first module design pass
 
 ## Current Next Steps
 
-1. Refine `docs/modules/quiz-session.md`.
-2. Refine the remaining module placeholders into stable module design docs.
-3. Define the domain model and event protocol before choosing any stack.
-4. Choose the stack only after the module contracts are stable.
+1. Choose the stack.
+2. Settle the remaining interface-shape items that affect scaffolding.
+3. Scaffold all planned interfaces, mocks, and placeholder integrations before deep module implementation.
+4. Add skeletal tests around those seams before fleshing out the detailed implementations.
+5. Start the first usable participation slice behind the scaffolded interfaces.
+
+## Resume Point
+
+The next session should resume with stack selection and interface scaffolding prep.
+
+Read in this order:
+
+1. `docs/PROJECT_PLAN.md`
+2. `docs/IMPLEMENTATION_STATUS.md`
+3. `docs/ARCHITECTURE_PRINCIPLES.md`
+4. `docs/architecture/logs/2026-03-28-02-open-question-review.md`
+5. `docs/modules/MODULE_DESIGN_PLAN.md`
+6. `docs/modules/quiz-session.md`
+7. `docs/modules/realtime-transport.md`
+8. `docs/modules/scoring-and-leaderboard.md`
+9. `docs/modules/observability-and-operations.md`
+
+Resume with these module decisions first:
+
+- choose the runtime, transport approach, and project structure
+- settle the payload-shape and health-surface details that affect the scaffold
+- define the first interface set and placeholder integrations
+- define the first skeletal test set
+
+After the first full pass through the design docs:
+
+- revisit tagged open questions across architecture and module docs
+- decide which questions must be resolved before stack selection
+- leave only intentional deferred items open
+
+After stack selection:
+
+- scaffold all core module interfaces before deep implementation
+- mock unfinished dependencies so integration seams exist early
+- add bare-bones tests around those seams as guard rails
 
 ## Cross-Cutting Documentation
 

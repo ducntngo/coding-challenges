@@ -188,7 +188,7 @@ Provides quiz and question data. For the challenge implementation, this may be m
 The architecture should support this path:
 
 1. initial implementation with in-memory storage behind a clear interface
-2. later migration to a scalable shared state or database-backed store
+2. later migration to a scalable shared or durable state store
 3. eventual multi-instance live session handling through shared state and coordination
 
 Important scaling implication:
@@ -222,7 +222,7 @@ Future production evolution should support:
 
 - stateless application nodes
 - shared session state or event stream
-- pub/sub fan-out for leaderboard updates
+- scalable fan-out for leaderboard updates
 - persistent storage for quiz definitions and result history
 - metrics and tracing for diagnosis under load
 
