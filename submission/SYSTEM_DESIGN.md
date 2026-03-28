@@ -80,6 +80,90 @@ flowchart LR
 2. The authoritative session snapshot changes phase and current-question context.
 3. Transport fans out `session.snapshot` so later submissions are validated against the right server-side state.
 
+## Concrete Runtime Flow Charts
+
+These diagrams use the actual modules and function names from the current implementation. Each lane is labeled as `Component :: concrete module`, and the specific function calls are shown in the messages so the diagrams stay aligned with the component table above without over-splitting one module into many lanes.
+
+### Join And Initial Snapshot
+
+```mermaid
+sequenceDiagram
+    participant Client as Client simulator or terminal flow :: WebSocket client
+    participant Gateway as Fastify + WebSocket gateway :: registerTransportRoutes() + DefaultTransportCommandHandler + SessionConnectionRegistry
+    participant Session as Quiz session services :: StubQuizSessionService
+    participant Quiz as Quiz definition source :: MockQuizDefinitionSource
+    participant Store as Session store interface :: InMemorySessionStore
+
+    Client->>Gateway: session.join
+    Gateway->>Gateway: handleMessage() + validateSessionJoinPayload()
+    Gateway->>Session: joinSession(...)
+    Session->>Quiz: getQuizDefinition(quizId)
+    Quiz-->>Session: quizDefinition
+    Session->>Store: getActiveSession(quizId)
+    Store-->>Session: existingSession or null
+    Session->>Session: buildSessionAggregate()
+    Session->>Store: saveSession(nextSession)
+    Store-->>Session: saved
+    Session-->>Gateway: SessionBindingResult
+    Gateway->>Gateway: buildTransportSessionView() + registerCurrentConnection()
+    Gateway-->>Client: session.joined
+```
+
+### Accepted Answer To Score And Leaderboard Fanout
+
+```mermaid
+sequenceDiagram
+    participant Client as Client simulator or terminal flow :: origin socket
+    participant Gateway as Fastify + WebSocket gateway :: registerTransportRoutes() + DefaultTransportCommandHandler + SessionConnectionRegistry
+    participant Submit as Quiz session services :: StubAnswerSubmissionService
+    participant Quiz as Quiz definition source :: MockQuizDefinitionSource
+    participant Store as Session store interface :: InMemorySessionStore
+    participant Score as Scoring and ranking policies :: StubScoringService
+    participant Peers as Client simulator or terminal flow :: passive session peers
+
+    Client->>Gateway: answer.submit
+    Gateway->>Gateway: handleMessage()
+    Gateway->>Submit: submitAnswer(...)
+    Submit->>Quiz: getQuizDefinition(quizId)
+    Quiz-->>Submit: quizDefinition + acceptedAnswer
+    Submit->>Store: getActiveSession(quizId)
+    Store-->>Submit: current session
+    Submit->>Score: scoreSubmission(...)
+    Score->>Score: calculateLinearScore()
+    Score-->>Submit: scoreDelta + totalScore
+    Submit->>Submit: buildSessionAggregate()
+    Submit->>Store: saveSession(nextSession)
+    Store-->>Submit: saved
+    Submit-->>Gateway: participant.score.updated + leaderboard.updated
+    Gateway->>Gateway: dispatchOutboundEvents() + getSessionConnections()
+    Gateway-->>Client: correlated score + leaderboard events
+    Gateway-->>Peers: passive copies without requestId
+```
+
+### How Clients Get Current Score And Leaderboard
+
+There is no standalone transport command such as `leaderboard.get` in the current implementation. Clients observe score and leaderboard state through these existing paths:
+
+```mermaid
+sequenceDiagram
+    participant Client as Client simulator or terminal flow :: active participant
+    participant Gateway as Fastify + WebSocket gateway :: command handling + outbound dispatch
+    participant Session as Quiz session services :: progression and snapshot publication
+
+    Client->>Gateway: session.join or session.reconnect
+    Gateway->>Gateway: buildTransportSessionView()
+    Gateway-->>Client: session.joined or session.reconnected
+    Note over Client: includes current leaderboard and self score
+
+    Client->>Gateway: accepted answer.submit
+    Gateway-->>Client: participant.score.updated + leaderboard.updated
+
+    Session->>Session: closeCurrentQuestion() or advanceToNextQuestion()
+    Session->>Gateway: publish(session) then dispatchProgressionSnapshot()
+    Gateway-->>Client: session.snapshot
+    Note over Client: authoritative full-state sync
+```
+
 ## Current Technology Choices
 
 | Area | Choice | Rationale |
@@ -90,7 +174,7 @@ flowchart LR
 | Realtime protocol | WebSocket via `@fastify/websocket` | explicit command and event envelopes without extra framework abstraction |
 | Testing | `node:test` plus headless WebSocket harness | low dependency overhead with meaningful end-to-end coverage |
 | CI | GitHub Actions | simple merge gate for install, typecheck, and tests |
-| State and quiz data | in-memory session store plus mocked quiz definitions behind interfaces | keeps the challenge implementation small while preserving replacement seams |
+| State and quiz data | in-memory session store plus mocked quiz definitions behind interfaces | keeps the challenge implementation small, avoids standing up Redis, Kubernetes, ingress, and database infrastructure during the challenge, and still preserves replacement seams |
 
 ## Why This Design Is Maintainable
 
@@ -127,6 +211,8 @@ The current implementation is a single-process service with in-memory state. Tha
 - all leaderboard calculation is local to one node
 - transport fanout only works inside that one runtime
 
+This was also a deliberate delivery choice. For the challenge, the goal was to prove the real-time session logic first without spending most of the implementation budget on Redis, Kubernetes, ingress, database provisioning, or other production infrastructure.
+
 ### Likely Production Topology
 
 ```mermaid
@@ -153,6 +239,128 @@ flowchart LR
     Gateway --> Obs
     Kafka --> Warehouse
 ```
+
+### Scale Case 1: Millions Of Users Across Thousands Of Games
+
+This is the more common large-scale case. The key idea is to shard by live session, not by individual socket.
+
+#### Kubernetes Routing And Session Ownership
+
+In a Kubernetes deployment, a plain `Service` or ingress layer does not understand `quizId` inside WebSocket frames. In practice, a cleaner pattern is:
+
+- clients connect through a load balancer or ingress to any gateway pod
+- the gateway pod keeps the WebSocket connection
+- on `session.join`, the gateway resolves or claims a session owner for that `quizId`
+- subsequent mutating commands for that session are forwarded internally to the owner
+
+The session-owner mapping can live in Redis as a leased directory, for example:
+
+- `session:{sessionId}:owner -> worker-id`
+- set with `SET NX EX` or a similar leased-claim pattern
+- renewed periodically by the owning worker
+
+A practical worker-selection strategy is rendezvous hashing or another stable hash over the active worker set, with Redis used as the authoritative lease record. In Kubernetes terms, the gateway forwards to the chosen owner over an internal service address such as gRPC or HTTP inside the cluster.
+
+This approach avoids requiring NGINX, Envoy, or another proxy layer to understand session routing inside already-established WebSocket connections.
+
+#### Why Not Just Let The Database Serialize Everything
+
+That is possible, especially as an intermediate production step:
+
+- store session state in PostgreSQL
+- use row locks or optimistic concurrency
+- let any gateway update the same session through the database
+
+The problem is that the database then becomes the serialization point for hot sessions. At moderate scale this can be acceptable, but under heavier contention it leads to:
+
+- row-lock congestion
+- retries or lock waits
+- noisier tail latency
+- a database that is acting like a distributed lock manager
+
+For many sessions at once, explicit session ownership is usually a cleaner scaling model than using the operational database as the main concurrency control surface.
+
+#### Realtime Ranking With Redis
+
+For the live leaderboard in this many-session case, Redis is a practical realtime serving structure:
+
+- keep durable participant or answer state in PostgreSQL
+- maintain a per-session Redis sorted set keyed by total score
+- read top `K` standings from Redis
+- read an individual participant's rank from Redis
+
+Because a single owner processes writes for a session, leaderboard updates remain linearized for that session. Redis gives efficient incremental rank maintenance, so the application does not need to full-sort the leaderboard on every accepted answer.
+
+BigQuery or another warehouse remains downstream-only for analytics, not the live serving path.
+
+### Scale Case 2: One Hotspot Game With Millions Of Connections
+
+This is a different problem. A single-owner-per-session model becomes a bottleneck if one game itself is massive.
+
+For that hotspot case, the system should switch from session-sharded processing to participant-sharded processing for that one game.
+
+#### Hotspot Processing Model
+
+- gateways still accept sockets on any pod
+- participants are assigned to answer-processing shards by participant hash
+- all shards read the same current question epoch from Redis or another low-latency control store
+- duplicate prevention is enforced per `participantId + questionId`, either by shard ownership or by an atomic Redis key such as `SETNX answer:{sessionId}:{questionId}:{participantId}`
+- accepted scores are applied incrementally to a Redis sorted set for the hotspot session
+
+This works because answer acceptance is mostly participant-local:
+
+- one participant can answer only once per question
+- score updates are per participant
+- leaderboard rank can be maintained incrementally from those score changes
+
+That means the system does not need one global lock around the entire hotspot game just to keep the ranking correct.
+
+#### Consistent Realtime Ranking With Redis
+
+For a hotspot game, the ranking path should be incremental instead of full-sort based:
+
+- store live score totals in a Redis sorted set per hotspot session
+- update scores with `ZADD`, `ZINCRBY`, or an equivalent atomic pattern
+- fetch top `K` plus a participant's own rank with `ZREVRANGE` and `ZREVRANK`
+
+This gives roughly logarithmic update cost instead of repeated full leaderboard sorting.
+
+For deterministic ties, keep a stable tie-break value such as participant join order alongside the sorted-set data and apply that tie-break consistently in the application read path.
+
+#### Fanout Strategy For A Hotspot Game
+
+The fanout model must also change for a million-connection session:
+
+- do not broadcast the full leaderboard on every accepted answer
+- publish incremental leaderboard deltas or top-`K` snapshots
+- include each participant's own score and rank separately
+- rate-limit or micro-batch leaderboard pushes, for example every few hundred milliseconds
+
+Immediate answer acknowledgement can still be synchronous, while the broader leaderboard fanout becomes near-real-time rather than per-answer full-state broadcast.
+
+#### Where Kafka Fits
+
+Kafka is useful after authoritative acceptance, not instead of it:
+
+- accepted answer or score update is committed first
+- then an event is published to Kafka
+- downstream consumers update durable read models, audits, or analytics
+
+Using Kafka before answer acceptance would make the core quiz experience eventually correct instead of immediately authoritative, which is the wrong tradeoff for in-session gameplay.
+
+#### Durability And Recovery
+
+For a true hotspot session, Redis can be the hot ranking surface, but it should not be the only durable record. A credible production path is:
+
+- Redis for current question state, ranking, and fast dedupe
+- Kafka for append-only answer or score events
+- PostgreSQL for operational durability, replay targets, and result history
+
+That combination gives a fast live path plus a recoverable source of truth if a hotspot session needs to be rebuilt after failure.
+
+#### Fairness Note
+
+A globally exact millisecond race across many distributed nodes is hard. For a very large hotspot game, a practical system would usually combine synchronized clocks with slightly coarser scoring windows or buckets so tiny cross-node clock differences do not dominate the result.
 
 ### Storage Path
 
