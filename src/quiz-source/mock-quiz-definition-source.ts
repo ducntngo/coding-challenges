@@ -3,7 +3,7 @@ import type { QuizDefinition, QuizDefinitionSource } from "./contracts";
 const demoQuiz: QuizDefinition = {
   quizId: "demo-quiz",
   title: "Demo Vocabulary Quiz",
-  questionIds: ["question-1"],
+  questionIds: ["question-1", "question-2"],
 };
 
 export class MockQuizDefinitionSource implements QuizDefinitionSource {

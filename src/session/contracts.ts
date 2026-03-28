@@ -32,6 +32,7 @@ export interface SessionSnapshot {
   readonly sessionInstanceId: string;
   readonly status: SessionStatus;
   readonly phase: SessionPhase;
+  readonly currentQuestionId: string | null;
   readonly version: number;
   readonly participants: readonly ParticipantSummary[];
   readonly leaderboard: readonly LeaderboardEntry[];

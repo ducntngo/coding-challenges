@@ -69,6 +69,7 @@ export interface TransportSessionView {
     readonly sessionInstanceId: string;
     readonly status: string;
     readonly phase: string;
+    readonly currentQuestionId: string | null;
     readonly version: number;
   };
   readonly self: {

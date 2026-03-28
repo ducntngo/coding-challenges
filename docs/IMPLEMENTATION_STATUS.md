@@ -8,7 +8,7 @@ This file is active and should be kept current through implementation and verifi
 
 ## Current Snapshot
 
-Repository state is now in early implementation. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The first real participation slices are now in place for `session.join`, `session.reconnect`, disconnect forwarding, and accepted `answer.submit`, and the headless WebSocket integration harness now covers concurrent sessions, session-wide score or leaderboard fanout, and closed-phase answer rejection. The next step is to deepen scoring behavior and add explicit current-question context plus richer answer validation while keeping the same harness green.
+Repository state is now in early implementation. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The first real participation slices are now in place for `session.join`, `session.reconnect`, disconnect forwarding, and accepted `answer.submit`, and the headless WebSocket integration harness now covers concurrent sessions, session-wide score or leaderboard fanout, closed-phase answer rejection, and wrong-question rejection using explicit current-question context in the session snapshot. The next step is to deepen scoring behavior and add real question progression while keeping the same harness green.
 
 ## Completed
 
@@ -74,18 +74,22 @@ Repository state is now in early implementation. The design baseline is stable, 
 - Added phase-aware answer rejection so submissions are rejected when the session phase is not `question_open`
 - Added unit coverage and headless integration coverage for closed-phase answer rejection
 - Verified the phase-aware rejection slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`
+- Added explicit `currentQuestionId` to session snapshots and transport-visible session views
+- Added wrong-question rejection so submissions must target the active question reference in the session snapshot
+- Expanded the unit suite and headless integration harness with wrong-question rejection coverage
+- Verified the current-question-context slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`
 
 ## In Progress
 
-- Moving from working session-wide score or leaderboard fanout into deeper scoring and current-question-aware answer-validation behavior
+- Moving from working session-wide score or leaderboard fanout into deeper scoring and question-progression behavior
 - Keeping scoring behavior and answer-result mapping behind the established interfaces while the implementations deepen, while expanding the existing harness instead of replacing it
 
 ## Next Recommended Steps
 
 1. Deepen scoring behavior behind the current `ScoringService` seam.
-2. Add explicit current-question context to the session state and transport-visible snapshot.
-3. Expand the integration harness with duplicate, late, and wrong-question scenarios.
-4. Keep the session-wide fanout and closed-phase rejection paths covered as scoring behavior changes.
+2. Add real question progression instead of keeping the scaffold pinned to one active question.
+3. Expand the integration harness with duplicate and late-answer scenarios.
+4. Keep the session-wide fanout, closed-phase rejection, and wrong-question rejection paths covered as scoring behavior changes.
 5. Keep the unit and integration suites separate as coverage grows.
 6. Keep `docs/ai-usage/` updated as work lands in commits.
 
@@ -170,6 +174,8 @@ Intentional deferrals:
 - passive fanout copies omit `requestId`, while the submitting connection still receives the direct command correlation id
 - the current scaffold starts active sessions in `question_open` until a separate host or progression flow exists
 - answer submissions now reject whenever the session phase is not `question_open`
+- session snapshots and join or reconnect payloads now carry `currentQuestionId`
+- answer submissions now reject when the requested question does not match the active question reference
 
 ## Current Guidance
 
@@ -178,7 +184,7 @@ Use the completed module contracts plus the stage-3 scaffold as the baseline. St
 ## Known Gaps
 
 - the current scoring behavior is intentionally stubbed and does not yet implement the final timing-based formula
-- explicit current-question context is not represented yet, so late and wrong-question rejection are still limited
+- real question progression is not implemented yet, so the active question remains pinned to the first quiz question in the current scaffold
 - No richer observability hooks exist beyond the minimal health surface and app logging
 
 ## Current Module Focus
@@ -203,7 +209,7 @@ Any new session should start by reading:
 Tomorrow's intended entry point:
 
 - active focus: `stage 5 scoring and leaderboard implementation`
-- first unresolved topic: add explicit current-question context for wrong-question and late-answer validation
+- first unresolved topic: add real question progression for late-answer validation
 - next unresolved topics: deepen scoring behavior, add more answer rejection cases, and keep expanding the integration harness
 
 ## Verification History
@@ -229,3 +235,4 @@ Tomorrow's intended entry point:
 - Verified the answer-submission slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`
 - Verified the session-update-fanout slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`
 - Verified the phase-aware rejection slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`
+- Verified the current-question-context slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`
