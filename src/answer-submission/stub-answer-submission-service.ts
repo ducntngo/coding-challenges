@@ -87,6 +87,8 @@ export class StubAnswerSubmissionService implements AnswerSubmissionService {
       };
     }
 
+    // Duplicate and late answers reject before scoring. An incorrect first
+    // answer is different: it is still accepted and simply scores zero.
     if (participantRecord.answeredQuestionIds.includes(input.questionId)) {
       return {
         accepted: false,
@@ -102,6 +104,8 @@ export class StubAnswerSubmissionService implements AnswerSubmissionService {
       questionId: input.questionId,
       answer: input.answer,
       acceptedAnswer: questionDefinition.acceptedAnswer,
+      // This fallback keeps the scoring seam total-order safe even if timing was
+      // not initialized for some reason; the answer then gets the minimum elapsed time.
       questionOpenedAtMs:
         existingSession.currentQuestionOpenedAtMs ?? receivedAtMs,
       receivedAtMs,
@@ -131,6 +135,8 @@ export class StubAnswerSubmissionService implements AnswerSubmissionService {
           : candidate,
     );
 
+    // Rebuilding the aggregate in one place keeps leaderboard recomputation and
+    // snapshot versioning centralized instead of hand-updating several fields here.
     const nextSession = buildSessionAggregate({
       existingSession,
       participantRecords: nextParticipantRecords,

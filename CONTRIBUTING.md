@@ -41,6 +41,8 @@ This repository is for a coding challenge submission. Contributors, including AI
 
 - Keep modules small and single-purpose.
 - Keep code changes small enough that reviewers can understand them without rediscovery.
+- Comment contract or interface definitions so the intent of the seam, important parameters, outputs, and caveats are visible where contributors first read the boundary.
+- Comment non-trivial or surprising code with the reason it must behave that way; avoid comments that only paraphrase obvious syntax.
 - Separate domain logic from I/O and framework-specific code.
 - Add tests for scoring, ranking, session state, and protocol handling.
 - Treat tests as part of the implementation slice, especially for behavior changes.

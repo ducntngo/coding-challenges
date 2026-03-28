@@ -1,5 +1,6 @@
 import type { AnswerSubmission, ScoringResult, ScoringService } from "./contracts";
 
+// Challenge-sized defaults: quick full-score window, then linear decay to a non-zero floor.
 const MAX_SCORE = 100;
 const MIN_CORRECT_SCORE = 10;
 const FAST_ANSWER_GRACE_MS = 5_000;
@@ -28,6 +29,7 @@ function normalizeAnswer(answer: string): string {
   return answer.trim().toLowerCase();
 }
 
+// Uses only server-observed timestamps so score ordering does not depend on client clocks.
 function calculateLinearScore(
   questionOpenedAtMs: number,
   receivedAtMs: number,

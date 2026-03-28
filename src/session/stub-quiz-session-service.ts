@@ -58,6 +58,7 @@ export class StubQuizSessionService implements QuizSessionService {
     const participantRecords = existingSession?.participantRecords ?? [];
     const currentQuestionId =
       existingSession?.snapshot.currentQuestionId ?? quiz.questionIds[0] ?? null;
+    // joinOrder is assigned once and later reused as the deterministic ranking fallback.
     const participantRecord: ParticipantRecord = {
       participantId: this.participantIdGenerator(),
       displayName: normalizeDisplayName(input.displayName),
@@ -78,6 +79,8 @@ export class StubQuizSessionService implements QuizSessionService {
         this.sessionInstanceIdGenerator(),
       phase: existingSession?.snapshot.phase ?? "question_open",
       currentQuestionId,
+      // Refresh the open timestamp when the first real participant joins so idle
+      // process startup time does not silently decay the first scored answer.
       currentQuestionOpenedAtMs: resolveCurrentQuestionOpenedAtMs({
         existingSession,
         participantRecords,
@@ -134,6 +137,7 @@ export class StubQuizSessionService implements QuizSessionService {
         candidate.participantId === participantRecord.participantId
           ? {
               ...candidate,
+              // Latest valid reconnect wins by replacing the stored owning socket id.
               state: "active" as const,
               connectionId: input.connectionId,
             }
@@ -177,6 +181,7 @@ export class StubQuizSessionService implements QuizSessionService {
       (candidate) => candidate.participantId === input.participantId,
     );
 
+    // Ignore stale disconnects so an older socket cannot evict a newer rebound connection.
     if (!participantRecord || participantRecord.connectionId !== input.connectionId) {
       return;
     }
@@ -227,6 +232,8 @@ function normalizeDisplayName(displayName: string | undefined): string | null {
   return trimmed ? trimmed : null;
 }
 
+// The first seeded session can be created before any human joins. Refreshing the
+// question-open timestamp on the first real join keeps speed-based scoring fair.
 function resolveCurrentQuestionOpenedAtMs({
   existingSession,
   participantRecords,

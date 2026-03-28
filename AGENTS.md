@@ -96,6 +96,8 @@ This file defines how AI assistants should work in this repository. It is the pr
 
 - Optimize for clarity and maintainability over premature complexity.
 - Keep code changes small enough to review quickly and verify confidently.
+- Add concise comments to contract or interface definitions so the purpose of the seam, important parameters, outputs, and caveats are clear where the boundary is declared.
+- Add concise comments to non-trivial or surprising code paths to explain why they are written that way; do not add comments that only restate obvious syntax.
 - Treat tests as part of the change, not optional follow-up work.
 - Every behavior-changing code slice should have clear tests or an explicit reason why a useful test does not exist yet.
 - Treat the current integration harness as a standing guard rail for module work, not an optional extra.

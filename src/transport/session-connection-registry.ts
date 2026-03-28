@@ -1,5 +1,9 @@
 import type { OutboundEventEnvelope } from "./contracts";
 
+/**
+ * Process-local routing record for the current live socket that owns a
+ * participant in one quiz session.
+ */
 export interface SessionConnectionBinding {
   readonly connectionId: string;
   readonly quizId: string;
@@ -8,6 +12,7 @@ export interface SessionConnectionBinding {
 }
 
 export class SessionConnectionRegistry {
+  // Allows disconnect cleanup to look up the participant that used to own a raw socket id.
   private readonly bindingsByConnectionId = new Map<
     string,
     {
@@ -16,6 +21,7 @@ export class SessionConnectionRegistry {
     }
   >();
 
+  // Only the latest connection for a participant should receive fanout after reconnect.
   private readonly currentConnectionsByParticipant = new Map<
     string,
     SessionConnectionBinding
@@ -33,6 +39,7 @@ export class SessionConnectionRegistry {
         existingParticipantKey,
       );
 
+      // Rebinding the same socket should replace the old participant key cleanly.
       if (existingConnection?.connectionId === binding.connectionId) {
         this.currentConnectionsByParticipant.delete(existingParticipantKey);
       }
@@ -71,6 +78,7 @@ export class SessionConnectionRegistry {
       participantKey,
     );
 
+    // Ignore stale disconnect cleanup so an older socket cannot evict a newer reconnect owner.
     if (currentConnection?.connectionId === input.connectionId) {
       this.currentConnectionsByParticipant.delete(participantKey);
     }

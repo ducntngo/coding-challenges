@@ -24,10 +24,16 @@ export interface TransportRouteDependencies {
   readonly sessionProgressionNotifier: SessionProgressionNotifier;
 }
 
+/**
+ * Wires the process-local WebSocket boundary to the transport command handler
+ * and the session fanout registry. In the challenge runtime, all live delivery
+ * happens inside this one process.
+ */
 export function registerTransportRoutes(
   app: FastifyInstance,
   deps: TransportRouteDependencies,
 ): void {
+  // This registry intentionally lives at the route layer because transport owns sockets.
   const connectionRegistry = new SessionConnectionRegistry();
   const unsubscribeFromProgressionUpdates =
     deps.sessionProgressionNotifier.subscribe((event) => {
@@ -169,6 +175,7 @@ function registerCurrentConnection(
     return;
   }
 
+  // A connection only becomes a live fanout recipient after a successful bind event.
   connectionRegistry.bindConnection({
     connectionId: ctx.connectionId,
     quizId: ctx.quizId,
@@ -194,6 +201,8 @@ function dispatchOutboundEvents(
     return;
   }
 
+  // Fanout is session-scoped and only makes sense once the origin socket is the
+  // currently bound owner. Otherwise the safest fallback is origin-only delivery.
   const recipients = connectionRegistry.getSessionConnections(ctx.quizId);
 
   if (!recipients.some((recipient) => recipient.connectionId === ctx.connectionId)) {
@@ -208,6 +217,7 @@ function dispatchOutboundEvents(
 
     for (const event of events) {
       recipient.send(
+        // requestId is only meaningful for the socket that issued the command.
         isOriginConnection ? event : withoutRequestId(event),
       );
     }
@@ -221,6 +231,8 @@ function shouldFanoutToSession(
     return false;
   }
 
+  // Rejections and join/reconnect acknowledgements stay connection-local. Only
+  // accepted score changes currently fan out to the rest of the session.
   return events.every(
     (event) =>
       event.event === "participant.score.updated" ||
@@ -248,6 +260,7 @@ function dispatchProgressionSnapshot(
   let recipientCount = 0;
 
   for (const recipient of recipients) {
+    // Snapshot payloads are recipient-specific because `self` depends on who is reading.
     const payload = buildTransportSessionViewFromSession(
       session,
       recipient.participantId,
