@@ -4,11 +4,12 @@
 
 ## Status
 
-Active draft. The early automated headless integration harness now exists, covers accepted answer flow plus session-wide score and leaderboard fanout, duplicate rejection, closed-phase rejection, wrong-question rejection, late-answer rejection after progression with transport-visible `session.snapshot` updates, and now also covers a deterministic slower-answer scoring case through that same real transport boundary. The current scoring seam resolves correctness from quiz-definition answer data and uses a simple linear timing formula behind the existing interfaces. The next hardening gaps are reviewer demo and observability polish.
+Stage-6 close-out draft. The automated headless integration harness now covers accepted answer flow plus session-wide score and leaderboard fanout, duplicate rejection, closed-phase rejection, wrong-question rejection, late-answer rejection after progression with transport-visible `session.snapshot` updates, and a deterministic slower-answer scoring case through that same real transport boundary. The current reviewer-facing demo path is now documented in `docs/implementation/06-demo-flow.md`, and the runtime now emits lightweight structured logs around joins, rejections, accepted answers, leaderboard updates, and progression snapshot fanout.
 
 Current scenario reference:
 
 - `docs/implementation/headless-integration-scenario.md`
+- `docs/implementation/06-demo-flow.md`
 
 ## Goal
 
@@ -33,7 +34,7 @@ Finish verification, documentation, and submission-ready packaging.
 7. Keep the scenario headless and code-driven instead of building a full frontend for test coverage.
 8. Keep unit and integration suites separated so fast feedback and deeper end-to-end coverage can evolve independently.
 9. Treat the existing integration harness as the canonical place for new multi-client and cross-session scenarios instead of creating disconnected one-off flows.
-10. Add a simple local multi-client demo flow.
+10. Keep the local multi-client demo flow lightweight and documentation-driven unless a dedicated client materially improves review quality.
 11. Write the AI collaboration document with prompts, tasks, and verification steps.
 12. Tighten README instructions.
 13. Review the repository from a submission perspective.

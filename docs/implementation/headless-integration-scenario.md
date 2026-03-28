@@ -103,8 +103,7 @@ As the implementation deepens, this same scenario should grow rather than be rep
 
 Next planned additions:
 
-- reviewer-facing local demo instructions for the current real-time flow
-- lightweight observability hooks around joins, progression, accepted answers, and rejections
+- final submission-facing README tightening and walkthrough polish
 
 ## Reviewer Guidance
 
@@ -113,3 +112,4 @@ To inspect the current automated scenario:
 - read `test/integration/headless-harness.test.ts`
 - run `npm run test:integration`
 - use this document as the plain-language walkthrough for the same flow
+- use `docs/implementation/06-demo-flow.md` for the lightweight local server and manual WebSocket walkthrough
