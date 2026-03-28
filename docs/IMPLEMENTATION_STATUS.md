@@ -8,7 +8,7 @@ This file is active and should be kept current, but some referenced design docs 
 
 ## Current Snapshot
 
-Repository state is still pre-implementation. The documentation scaffold is merged, the stable architecture baseline is defined, and stable first-pass module contracts now exist for all planned modules. The open-question review is complete, no architecture blocker currently prevents stack selection, and the project is moving into stage 3 with an explicit plan to choose the stack, add simple CI, then scaffold interfaces, mocks, and skeletal tests before deep implementation.
+Repository state is still pre-implementation. The documentation scaffold is merged, the stable architecture baseline is defined, and stable first-pass module contracts now exist for all planned modules. The open-question review is complete, the initial implementation stack is now selected, and the project is moving through stage 3 with an explicit plan to add simple CI, then scaffold interfaces, mocks, and skeletal tests before deep implementation.
 
 ## Completed
 
@@ -33,25 +33,25 @@ Repository state is still pre-implementation. The documentation scaffold is merg
 - Added a module working-log entry for the `observability-and-operations` decision set
 - Reviewed the tagged open questions and recorded the review outcome for stack-selection readiness
 - Updated governance docs to require short type tags in commit subjects
+- Selected the initial implementation stack and refined `docs/implementation/01-foundation.md`
+- Logged the stack-selection rationale in the architecture tradeoff docs
 
 ## In Progress
 
-- Moving from completed design work into stack selection and interface scaffolding prep
+- Moving from stack selection into CI setup and interface scaffolding prep
 - Keeping the remaining implementation-plan placeholders explicit until they are refined
 
 ## Next Recommended Steps
 
-1. Choose the stack and project structure.
-2. Add a simple CI pipeline immediately after the stack is chosen.
-3. Settle the remaining payload-shape and health-surface details that affect scaffolding.
-4. Scaffold all planned interfaces and mock integrations before deep implementation work.
-5. Add skeletal tests around those seams as early guard rails.
-6. Keep `docs/ai-usage/` updated as work lands in commits.
+1. Add a simple CI pipeline for the selected stack.
+2. Settle the remaining payload-shape and health-surface details that affect scaffolding.
+3. Scaffold all planned interfaces and mock integrations before deep implementation work.
+4. Add skeletal tests around those seams as early guard rails.
+5. Keep `docs/ai-usage/` updated as work lands in commits.
 
 ## Open Decisions
 
-- Exact runtime stack and library choice
-- Exact real-time transport approach
+- Exact version pins and project scripts for the selected stack
 - Exact event names and payload schema
 - Exact speed-based scoring formula
 - Exact reconnect retention TTL and inactive-session cleanup thresholds
@@ -112,10 +112,11 @@ Intentional deferrals:
 - Scoring returns transport-visible result objects without embedding transport envelopes
 - Observability uses shared correlation fields across session, connection, participant, and request boundaries
 - The challenge implementation should favor a minimal but diagnosable observability surface instead of a production-heavy setup
+- Initial implementation stack: Node.js LTS, TypeScript, Fastify, `@fastify/websocket`, `node:test`, and GitHub Actions
 
 ## Current Guidance
 
-Use the completed first-pass module contracts and the open-question review outcome as the reference baseline for stage 3. The intended sequence is stack selection, simple CI setup, interface scaffolding, mocked seams, then skeletal tests and deeper implementation. Stable module docs should stay concise but include interface-first build steps and unit-test guard rails for the later implementation pass.
+Use the completed first-pass module contracts, the open-question review outcome, and the selected implementation stack as the reference baseline for stage 3. The intended sequence is simple CI setup, interface scaffolding, mocked seams, then skeletal tests and deeper implementation. Stable module docs should stay concise but include interface-first build steps and unit-test guard rails for the later implementation pass.
 
 ## Known Gaps
 
@@ -124,11 +125,10 @@ Use the completed first-pass module contracts and the open-question review outco
 - No runnable local setup yet
 - No CI pipeline yet
 - No interface scaffold or mocked integration seams yet
-- No stack has been selected yet
 
 ## Current Module Focus
 
-- Active focus: `stage 3 stack selection and CI planning`
+- Active focus: `stage 3 CI setup and interface scaffolding prep`
 
 ## Handoff Notes
 
@@ -137,19 +137,20 @@ Any new session should start by reading:
 1. `AGENTS.md`
 2. `docs/PROJECT_PLAN.md`
 3. `docs/ARCHITECTURE_PRINCIPLES.md`
-4. `docs/architecture/logs/2026-03-28-02-open-question-review.md`
-5. `docs/modules/MODULE_DESIGN_PLAN.md`
-6. `docs/modules/quiz-session.md`
-7. `docs/modules/realtime-transport.md`
-8. `docs/modules/scoring-and-leaderboard.md`
-9. `docs/modules/observability-and-operations.md`
-10. relevant files under `docs/implementation/`
+4. `docs/architecture/logs/2026-03-28-03-stack-selection.md`
+5. `docs/architecture/logs/2026-03-28-02-open-question-review.md`
+6. `docs/modules/MODULE_DESIGN_PLAN.md`
+7. `docs/modules/quiz-session.md`
+8. `docs/modules/realtime-transport.md`
+9. `docs/modules/scoring-and-leaderboard.md`
+10. `docs/modules/observability-and-operations.md`
+11. relevant files under `docs/implementation/`
 
 Tomorrow's intended entry point:
 
-- active focus: `stage 3 stack selection and CI planning`
-- first unresolved topic: choose the runtime, transport approach, and project structure
-- next unresolved topics: add simple CI for the chosen stack, then finalize scaffold-affecting payload and health-surface details
+- active focus: `stage 3 CI setup and interface scaffolding prep`
+- first unresolved topic: add simple CI for the chosen stack
+- next unresolved topics: finalize scaffold-affecting payload and health-surface details
 
 ## Verification History
 
@@ -165,3 +166,4 @@ Tomorrow's intended entry point:
 - Reviewed all tagged open questions and recorded which items are stack-blocking, stage-3, or intentionally deferred
 - Rechecked governance docs and aligned commit-subject rules across `AGENTS.md` and `CONTRIBUTING.md`
 - Updated the stage-3 plan to require a simple CI pipeline immediately after stack selection
+- Reviewed official Node.js and Fastify documentation before selecting the initial implementation stack
