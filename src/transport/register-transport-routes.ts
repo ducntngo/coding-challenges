@@ -1,19 +1,30 @@
 import { randomUUID } from "node:crypto";
 
 import type { FastifyInstance } from "fastify";
-import type { RawData, WebSocket } from "ws";
+import WebSocket, { type RawData } from "ws";
 
 import type { ConnectionContext } from "./connection-context";
+import type { OutboundEventEnvelope } from "./contracts";
+import { SessionConnectionRegistry } from "./session-connection-registry";
 import type { TransportCommandHandler } from "./transport-command-handler";
 
 export function registerTransportRoutes(
   app: FastifyInstance,
   handler: TransportCommandHandler,
 ): void {
+  const connectionRegistry = new SessionConnectionRegistry();
+
   app.get("/ws", { websocket: true }, (socket: WebSocket) => {
     const ctx: ConnectionContext = {
       connectionId: randomUUID(),
       state: "awaiting_bind",
+    };
+    const sendToSocket = (event: OutboundEventEnvelope): void => {
+      if (socket.readyState !== WebSocket.OPEN) {
+        return;
+      }
+
+      socket.send(JSON.stringify(event));
     };
 
     socket.on("message", async (buffer: RawData) => {
@@ -23,24 +34,34 @@ export function registerTransportRoutes(
       try {
         const events = await handler.handleMessage(ctx, rawMessage);
 
-        for (const event of events) {
-          socket.send(JSON.stringify(event));
-        }
+        registerCurrentConnection(connectionRegistry, ctx, events, sendToSocket);
+        dispatchOutboundEvents(connectionRegistry, ctx, events, sendToSocket);
       } catch (error) {
         app.log.error({ err: error, connectionId: ctx.connectionId }, "transport handler failed");
-        socket.send(
-          JSON.stringify({
+        sendToSocket(
+          {
             event: "command.rejected",
             payload: {
               code: "internal_error",
               message: "Unhandled transport error.",
             },
-          }),
+          },
         );
       }
     });
 
     socket.on("close", () => {
+      const disconnectBinding =
+        ctx.state === "bound" && ctx.quizId !== undefined && ctx.participantId !== undefined
+          ? {
+              connectionId: ctx.connectionId,
+              quizId: ctx.quizId,
+              participantId: ctx.participantId,
+            }
+          : {
+              connectionId: ctx.connectionId,
+            };
+
       void handler.handleDisconnect(ctx).catch((error) => {
         app.log.error(
           {
@@ -51,7 +72,103 @@ export function registerTransportRoutes(
           },
           "transport disconnect handler failed",
         );
+      }).finally(() => {
+        connectionRegistry.unbindConnection(disconnectBinding);
       });
     });
   });
+}
+
+function registerCurrentConnection(
+  connectionRegistry: SessionConnectionRegistry,
+  ctx: ConnectionContext,
+  events: readonly OutboundEventEnvelope[],
+  send: (event: OutboundEventEnvelope) => void,
+): void {
+  if (
+    ctx.state !== "bound" ||
+    ctx.quizId === undefined ||
+    ctx.participantId === undefined
+  ) {
+    return;
+  }
+
+  const acceptedBindEvent = events.some(
+    (event) =>
+      event.event === "session.joined" || event.event === "session.reconnected",
+  );
+
+  if (!acceptedBindEvent) {
+    return;
+  }
+
+  connectionRegistry.bindConnection({
+    connectionId: ctx.connectionId,
+    quizId: ctx.quizId,
+    participantId: ctx.participantId,
+    send,
+  });
+}
+
+function dispatchOutboundEvents(
+  connectionRegistry: SessionConnectionRegistry,
+  ctx: ConnectionContext,
+  events: readonly OutboundEventEnvelope[],
+  sendToOrigin: (event: OutboundEventEnvelope) => void,
+): void {
+  if (
+    !shouldFanoutToSession(events) ||
+    ctx.state !== "bound" ||
+    ctx.quizId === undefined
+  ) {
+    for (const event of events) {
+      sendToOrigin(event);
+    }
+    return;
+  }
+
+  const recipients = connectionRegistry.getSessionConnections(ctx.quizId);
+
+  if (!recipients.some((recipient) => recipient.connectionId === ctx.connectionId)) {
+    for (const event of events) {
+      sendToOrigin(event);
+    }
+    return;
+  }
+
+  for (const recipient of recipients) {
+    const isOriginConnection = recipient.connectionId === ctx.connectionId;
+
+    for (const event of events) {
+      recipient.send(
+        isOriginConnection ? event : withoutRequestId(event),
+      );
+    }
+  }
+}
+
+function shouldFanoutToSession(
+  events: readonly OutboundEventEnvelope[],
+): boolean {
+  if (events.length === 0) {
+    return false;
+  }
+
+  return events.every(
+    (event) =>
+      event.event === "participant.score.updated" ||
+      event.event === "leaderboard.updated",
+  );
+}
+
+function withoutRequestId(
+  event: OutboundEventEnvelope,
+): OutboundEventEnvelope {
+  if (event.requestId === undefined) {
+    return event;
+  }
+
+  const { requestId: _requestId, ...eventWithoutRequestId } = event;
+
+  return eventWithoutRequestId;
 }
