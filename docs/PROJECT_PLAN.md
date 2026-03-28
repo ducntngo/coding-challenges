@@ -4,7 +4,7 @@
 
 ## Status
 
-This is the active execution plan for the project. Some downstream module and implementation documents are still placeholders, but this file should describe the current intended sequence of work with enough clarity for a new session to continue immediately.
+This is the active execution plan for the project. The core design docs are now stable, and this file should describe the current implementation sequence clearly enough for a new session to continue immediately.
 
 ## Goal
 
@@ -51,7 +51,7 @@ The project should progress in three layers:
 2. Implementation and verification
 3. Submission packaging and demo prep
 
-The immediate focus is still layer 1. The objective is to remove ambiguity before any code scaffold is chosen.
+Layer 1 is complete. The current focus is the early part of layer 2: keep the scaffold stable, keep CI lightweight, and deepen the first participation flow behind the existing interfaces.
 
 Within layer 2, the implementation sequence should be:
 
@@ -69,8 +69,8 @@ Within layer 2, the implementation sequence should be:
 | 0. Documentation and workflow setup | Completed | Governance docs, planning scaffold, AI diary rules, and repo workflow rules are in place. |
 | 1. Refine design boundary and execution plan | Completed | Solution scope, execution sequence, and design workflow are now explicit. |
 | 2. Define architecture and module contracts | Completed | Architecture baseline, stable first-pass module contracts, and the open-question review are complete. No remaining architecture blocker currently prevents stack selection. |
-| 3. Select stack, add CI, and scaffold interfaces | In progress | The implementation stack is now selected. Next add a simple CI pipeline, then scaffold all planned interfaces, mocks, and placeholder integrations. |
-| 4. Add guard-rail tests and participation skeleton | Pending | Add bare-bones tests around the scaffolded seams and implement the first usable participation flow behind the existing interfaces. |
+| 3. Select stack, add CI, and scaffold interfaces | Completed | The selected stack, lightweight CI, onboarding script, source tree, interface seams, in-memory or mocked adapters, and initial guard-rail tests are now in place. |
+| 4. Add guard-rail tests and participation skeleton | In progress | The first tests exist. Next deepen the usable participation flow behind the scaffolded interfaces, starting with session join and connection binding. |
 | 5. Implement scoring and leaderboard flow | Pending | Deepen the stubbed scoring, ranking, and live update paths without breaking the established interfaces or guard-rail tests. |
 | 6. Strengthen tests, demo flow, and observability hooks | Pending | Expand tests, improve the local multi-client demo path, and add logging plus developer run instructions. |
 | 7. Finalize submission package | Pending | Final docs, AI collaboration summary, architecture diagram, and video preparation notes. |
@@ -117,27 +117,27 @@ Within layer 2, the implementation sequence should be:
 
 ## Active Focus
 
-Current stage: `3. Select stack, add CI, and scaffold interfaces`
+Current stage: `4. Add guard-rail tests and participation skeleton`
 
 Immediate next outputs:
 
-- add a simple CI pipeline immediately after stack selection
-- settle the small set of remaining interface-shape items that affect scaffolding
-- scaffold interfaces, mocks, and placeholder integrations
-- prepare skeletal tests as guard rails for the first implementation slice
-- keep `docs/IMPLEMENTATION_STATUS.md` aligned with the current design stage
+- implement the first usable `session.join` flow behind the scaffolded interfaces
+- bind successful joins to the connection context and emit the first success acknowledgement path
+- expand tests around join success, join rejection, and bound-connection behavior
+- keep the transport adapter thin while session behavior starts to deepen
+- keep `docs/IMPLEMENTATION_STATUS.md` aligned with the current implementation stage
 
 ## Current Next Steps
 
-1. Add a simple CI pipeline for the chosen stack.
-2. Settle the remaining interface-shape items that affect scaffolding.
-3. Scaffold all planned interfaces, mocks, and placeholder integrations before deep module implementation.
-4. Add skeletal tests around those seams before fleshing out the detailed implementations.
-5. Start the first usable participation slice behind the scaffolded interfaces.
+1. Implement `joinSession` behind the existing session and store interfaces.
+2. Map `session.join` to a successful transport acknowledgement plus the current snapshot.
+3. Bind the connection context on successful join and cover that with tests.
+4. Implement `session.reconnect` behind the same interfaces.
+5. Add disconnect handling and the next transport guard-rail tests.
 
 ## Resume Point
 
-The next session should resume with CI setup and interface scaffolding prep for the selected stack.
+The next session should resume with the first real participation slice behind the stage-3 scaffold.
 
 Read in this order:
 
@@ -154,10 +154,10 @@ Read in this order:
 
 Resume with these implementation decisions first:
 
-- add a simple CI pipeline for the selected stack
-- settle the payload-shape and health-surface details that affect the scaffold
-- define the first interface set and placeholder integrations
-- define the first skeletal test set
+- implement the first accepted `session.join` path
+- finalize the first join success payload shape
+- update connection binding after join succeeds
+- expand the guard-rail test set around the participation boundary
 
 After the first full pass through the design docs:
 
@@ -165,12 +165,12 @@ After the first full pass through the design docs:
 - resolve only the tagged items that affect CI, interface seams, or early implementation
 - leave only intentional deferred items open
 
-With the stack selected:
+With the foundation scaffold in place:
 
-- add a simple CI pipeline for the chosen stack
-- scaffold all core module interfaces before deep implementation
-- mock unfinished dependencies so integration seams exist early
-- add bare-bones tests around those seams as guard rails
+- keep all deeper work behind the existing interfaces
+- expand tests before or alongside each new behavior slice
+- keep unfinished downstream behavior mocked or stubbed until its turn arrives
+- preserve the lightweight CI baseline while behavior grows
 
 ## Cross-Cutting Documentation
 
@@ -195,7 +195,6 @@ The following docs should be updated throughout the project, not only at the end
 
 The following should not be optimized yet:
 
-- exact dependency version pinning beyond what the scaffold needs
 - richer formatting or linting setup than the first CI pass needs
 - full project directory structure
 - advanced production features beyond what the design discussion requires
@@ -206,3 +205,4 @@ The following should not be optimized yet:
 - Documentation-first workflow chosen to support both implementation and final submission
 - Stack selection intentionally deferred until after architecture and module-contract refinement
 - Selected implementation stack: Node.js LTS, TypeScript, Fastify, `@fastify/websocket`, `node:test`, and GitHub Actions
+- Shared environment onboarding path: `npm run bootstrap`
