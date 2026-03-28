@@ -157,7 +157,12 @@ test("headless integration harness covers multiple players across concurrent ses
     ["Carol", "Dana"],
   );
 
-  const [aliceAnswerEvents, carolAnswerEvents] = await Promise.all([
+  const [
+    aliceAnswerEvents,
+    bobFanoutEvents,
+    carolAnswerEvents,
+    danaFanoutEvents,
+  ] = await Promise.all([
     aliceConnection.sendCommandAndReadEvents(
       {
         command: "answer.submit",
@@ -169,6 +174,7 @@ test("headless integration harness covers multiple players across concurrent ses
       },
       2,
     ),
+    bobConnection.readEvents(2),
     carolConnection.sendCommandAndReadEvents(
       {
         command: "answer.submit",
@@ -180,13 +186,18 @@ test("headless integration harness covers multiple players across concurrent ses
       },
       2,
     ),
+    danaConnection.readEvents(2),
   ]);
 
   assert.equal(aliceAnswerEvents.length, 2);
+  assert.equal(bobFanoutEvents.length, 2);
   assert.equal(carolAnswerEvents.length, 2);
+  assert.equal(danaFanoutEvents.length, 2);
 
   const [aliceScoreEnvelope, aliceLeaderboardEnvelope] = aliceAnswerEvents;
+  const [bobScoreEnvelope, bobLeaderboardEnvelope] = bobFanoutEvents;
   const [carolScoreEnvelope, carolLeaderboardEnvelope] = carolAnswerEvents;
+  const [danaScoreEnvelope, danaLeaderboardEnvelope] = danaFanoutEvents;
 
   const aliceScoreEvent = assertScoreEvent(
     aliceScoreEnvelope!,
@@ -201,6 +212,19 @@ test("headless integration harness covers multiple players across concurrent ses
     "req-answer-alice",
     "demo-quiz",
   );
+  const bobScoreEvent = assertScoreEvent(
+    bobScoreEnvelope!,
+    undefined,
+    aliceJoinPayload.self.participantId,
+    "demo-quiz",
+    100,
+    100,
+  );
+  const bobLeaderboardEvent = assertLeaderboardEvent(
+    bobLeaderboardEnvelope!,
+    undefined,
+    "demo-quiz",
+  );
   const carolScoreEvent = assertScoreEvent(
     carolScoreEnvelope!,
     "req-answer-carol",
@@ -212,6 +236,19 @@ test("headless integration harness covers multiple players across concurrent ses
   const carolLeaderboardEvent = assertLeaderboardEvent(
     carolLeaderboardEnvelope!,
     "req-answer-carol",
+    "science-quiz",
+  );
+  const danaScoreEvent = assertScoreEvent(
+    danaScoreEnvelope!,
+    undefined,
+    carolJoinPayload.self.participantId,
+    "science-quiz",
+    0,
+    0,
+  );
+  const danaLeaderboardEvent = assertLeaderboardEvent(
+    danaLeaderboardEnvelope!,
+    undefined,
     "science-quiz",
   );
 
@@ -229,6 +266,7 @@ test("headless integration harness covers multiple players across concurrent ses
       rank: 2,
     },
   ]);
+  assert.deepEqual(bobLeaderboardEvent.leaderboard, aliceLeaderboardEvent.leaderboard);
   assert.deepEqual(carolLeaderboardEvent.leaderboard, [
     {
       participantId: carolJoinPayload.self.participantId,
@@ -243,9 +281,15 @@ test("headless integration harness covers multiple players across concurrent ses
       rank: 2,
     },
   ]);
+  assert.deepEqual(
+    danaLeaderboardEvent.leaderboard,
+    carolLeaderboardEvent.leaderboard,
+  );
 
   assert.equal(aliceScoreEvent.questionId, "question-1");
+  assert.equal(bobScoreEvent.questionId, "question-1");
   assert.equal(carolScoreEvent.questionId, "question-1");
+  assert.equal(danaScoreEvent.questionId, "question-1");
 
   const demoSnapshotAfterAnswer = await waitForSessionSnapshot(
     deps,
@@ -465,6 +509,10 @@ class IntegrationTestClient {
   ): Promise<OutboundEventEnvelope[]> {
     this.socket.send(JSON.stringify(envelope));
 
+    return this.readEvents(expectedEventCount);
+  }
+
+  async readEvents(expectedEventCount: number): Promise<OutboundEventEnvelope[]> {
     const events: OutboundEventEnvelope[] = [];
 
     for (let index = 0; index < expectedEventCount; index += 1) {
@@ -584,7 +632,7 @@ function assertSessionEvent(
 
 function assertScoreEvent(
   event: OutboundEventEnvelope,
-  expectedRequestId: string,
+  expectedRequestId: string | undefined,
   expectedParticipantId: string,
   expectedQuizId: string,
   expectedScoreDelta: number,
@@ -608,7 +656,7 @@ function assertScoreEvent(
 
 function assertLeaderboardEvent(
   event: OutboundEventEnvelope,
-  expectedRequestId: string,
+  expectedRequestId: string | undefined,
   expectedQuizId: string,
 ): LeaderboardUpdatedPayload {
   assert.equal(event.event, "leaderboard.updated");

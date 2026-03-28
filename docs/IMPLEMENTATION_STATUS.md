@@ -8,7 +8,7 @@ This file is active and should be kept current through implementation and verifi
 
 ## Current Snapshot
 
-Repository state is now in early implementation. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The first real participation slices are now in place for `session.join`, `session.reconnect`, disconnect forwarding, and a first accepted `answer.submit` path, and the project now also has an early headless WebSocket integration harness that covers concurrent sessions plus accepted answer flow. The next step is to deepen scoring behavior and move answer-result visibility from submitter-only responses toward session-wide live updates.
+Repository state is now in early implementation. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The first real participation slices are now in place for `session.join`, `session.reconnect`, disconnect forwarding, and accepted `answer.submit`, and the headless WebSocket integration harness now covers concurrent sessions plus session-wide score and leaderboard fanout. The next step is to deepen scoring behavior and add question-phase-aware answer validation while keeping the same harness green.
 
 ## Completed
 
@@ -65,18 +65,23 @@ Repository state is now in early implementation. The design baseline is stable, 
 - Added unit coverage for accepted answer submission and duplicate-answer rejection
 - Expanded the headless integration harness to cover accepted answer flow and leaderboard state across concurrent sessions
 - Verified the answer-submission slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`
+- Added a session-connection registry so transport can route session-scoped live updates to the current active connections in a quiz
+- Added session-wide fanout for `participant.score.updated` and `leaderboard.updated` while keeping join and reconnect acknowledgements connection-local
+- Added unit coverage for current-connection replacement and quiz-scoped connection lookup in the registry
+- Expanded the headless integration harness to assert passive recipients see score and leaderboard updates for their own session only
+- Verified the fanout slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`
 
 ## In Progress
 
-- Moving from the first accepted answer path into deeper scoring and leaderboard behavior
+- Moving from working session-wide score or leaderboard fanout into deeper scoring and answer-validation behavior
 - Keeping scoring behavior and answer-result mapping behind the established interfaces while the implementations deepen, while expanding the existing harness instead of replacing it
 
 ## Next Recommended Steps
 
 1. Deepen scoring behavior behind the current `ScoringService` seam.
-2. Add session-wide fanout for accepted score and leaderboard updates instead of replying only to the submitting connection.
-3. Expand the integration harness to assert score and leaderboard visibility from other participants in the same session.
-4. Add more answer rejection coverage as question-phase behavior becomes real.
+2. Add question-phase-aware answer validation and rejection behavior.
+3. Expand the integration harness with duplicate, late, and wrong-question scenarios.
+4. Keep the session-wide fanout path covered as scoring behavior changes.
 5. Keep the unit and integration suites separate as coverage grows.
 6. Keep `docs/ai-usage/` updated as work lands in commits.
 
@@ -157,6 +162,8 @@ Intentional deferrals:
 - an early headless WebSocket integration harness now covers join, reconnect, disconnect, and session isolation across multiple quiz sessions
 - the first accepted `answer.submit` path now mutates score and leaderboard state behind a dedicated `AnswerSubmissionService`
 - accepted answer results are currently exposed through `participant.score.updated` and `leaderboard.updated` transport events without embedding transport details in scoring logic
+- session-wide score and leaderboard updates now fan out to the active connections in the same quiz session
+- passive fanout copies omit `requestId`, while the submitting connection still receives the direct command correlation id
 
 ## Current Guidance
 
@@ -165,7 +172,6 @@ Use the completed module contracts plus the stage-3 scaffold as the baseline. St
 ## Known Gaps
 
 - the current scoring behavior is intentionally stubbed and does not yet implement the final timing-based formula
-- accepted score and leaderboard events currently return only to the submitting connection rather than fan out session-wide
 - late-answer rejection and question-phase-aware validation are not implemented yet
 - No richer observability hooks exist beyond the minimal health surface and app logging
 
@@ -191,7 +197,7 @@ Any new session should start by reading:
 Tomorrow's intended entry point:
 
 - active focus: `stage 5 scoring and leaderboard implementation`
-- first unresolved topic: fan out accepted score and leaderboard updates to the rest of the session
+- first unresolved topic: add question-phase-aware answer validation and rejection
 - next unresolved topics: deepen scoring behavior, add more answer rejection cases, and keep expanding the integration harness
 
 ## Verification History
@@ -215,3 +221,4 @@ Tomorrow's intended entry point:
 - Verified the disconnected slice locally with `npm run typecheck`, `npm test`, and `npm run build`
 - Verified the split unit and integration suites locally with `npm run test:unit`, `npm run test:integration`, and `npm test`
 - Verified the answer-submission slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`
+- Verified the session-update-fanout slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`
