@@ -41,7 +41,17 @@ export function registerTransportRoutes(
     });
 
     socket.on("close", () => {
-      void handler.handleDisconnect(ctx);
+      void handler.handleDisconnect(ctx).catch((error) => {
+        app.log.error(
+          {
+            err: error,
+            connectionId: ctx.connectionId,
+            quizId: ctx.quizId,
+            participantId: ctx.participantId,
+          },
+          "transport disconnect handler failed",
+        );
+      });
     });
   });
 }

@@ -8,7 +8,7 @@ This file is active and should be kept current through implementation and verifi
 
 ## Current Snapshot
 
-Repository state is now in early implementation. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The first real participation slices are now in place for `session.join` and `session.reconnect`, and the project is moving deeper into stage 4 with disconnect forwarding and answer acceptance next.
+Repository state is now in early implementation. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The first real participation slices are now in place for `session.join`, `session.reconnect`, and disconnect forwarding, and the project is moving deeper into stage 4 with an early headless integration harness plus answer acceptance next.
 
 ## Completed
 
@@ -51,19 +51,23 @@ Repository state is now in early implementation. The design baseline is stable, 
 - Implemented transport-side `session.reconnect` handling, success acknowledgement mapping, and connection rebinding updates
 - Added tests for reconnect success and invalid reconnect rejection
 - Verified the reconnect slice with local typecheck, test, and build runs
+- Implemented disconnect forwarding behind the session and transport interfaces
+- Added stale-disconnect-safe connection release behavior so an older connection cannot evict a newer rebound connection
+- Added tests for session disconnect, stale disconnect after reconnect, and transport-side disconnect cleanup
+- Verified the disconnect slice with local typecheck, test, and build runs
 
 ## In Progress
 
-- Moving from the working join and reconnect slices into disconnect forwarding and answer acceptance
-- Keeping disconnect, answer acceptance, and scoring behavior behind the established interfaces while the implementations deepen
+- Moving from the working join, reconnect, and disconnect slices into the first thin headless integration harness and answer acceptance
+- Keeping answer acceptance and scoring behavior behind the established interfaces while the implementations deepen
 
 ## Next Recommended Steps
 
-1. Implement disconnect forwarding and stale-disconnect-safe handling.
-2. Add tests for disconnect behavior before wiring connection-close handling.
+1. Add an early automated headless integration harness that exercises join, reconnect, disconnect, and session isolation across multiple clients and quiz sessions.
+2. Keep unfinished answer and scoring behavior stubbed in that harness until the deeper implementations land.
 3. Start the first accepted `answer.submit` path behind the existing transport and scoring seams.
 4. Add scoring-result mapping tests before deepening leaderboard behavior.
-5. Plan for a later automated headless integration test that simulates multiple players across concurrent sessions without needing a full frontend.
+5. Expand the integration harness as answer handling and leaderboard updates become real.
 6. Keep `docs/ai-usage/` updated as work lands in commits.
 
 ## Open Decisions
@@ -137,6 +141,8 @@ Intentional deferrals:
 - `session.join` now returns participant binding data plus the current snapshot and binds the connection context on success
 - The current join success payload shape is `session`, `self`, `participants`, and `leaderboard`
 - `session.reconnect` now rebinds the existing participant identity by reconnect token and returns the same transport-visible snapshot shape as join
+- disconnect forwarding now releases the active connection owner only when the disconnect comes from the still-owning connection
+- transport-side disconnect handling now clears local binding context after forwarding the disconnect to the session boundary
 
 ## Current Guidance
 
@@ -144,10 +150,10 @@ Use the completed module contracts plus the stage-3 scaffold as the baseline. St
 
 ## Known Gaps
 
-- disconnect forwarding and answer acceptance are still stubbed
+- answer acceptance is still stubbed
 - No end-to-end successful WebSocket participation flow exists yet
 - No scoring or leaderboard mutation path exists yet
-- No automated headless multi-player and multi-session integration test exists yet
+- No early headless integration harness exists yet
 - No richer observability hooks exist beyond the minimal health surface and app logging
 
 ## Current Module Focus
@@ -172,7 +178,7 @@ Any new session should start by reading:
 Tomorrow's intended entry point:
 
 - active focus: `stage 4 participation flow implementation`
-- first unresolved topic: implement disconnect forwarding
+- first unresolved topic: build the first thin headless integration harness over the current join, reconnect, and disconnect seams
 - next unresolved topics: answer acceptance, scoring integration, and richer participation tests
 
 ## Verification History

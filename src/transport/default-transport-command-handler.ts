@@ -165,7 +165,25 @@ export class DefaultTransportCommandHandler implements TransportCommandHandler {
   }
 
   async handleDisconnect(_ctx: ConnectionContext): Promise<void> {
-    return;
+    if (
+      _ctx.state !== "bound" ||
+      _ctx.quizId === undefined ||
+      _ctx.participantId === undefined
+    ) {
+      return;
+    }
+
+    try {
+      await this.deps.sessionService.disconnectParticipant({
+        quizId: _ctx.quizId,
+        participantId: _ctx.participantId,
+        connectionId: _ctx.connectionId,
+      });
+    } finally {
+      _ctx.state = "awaiting_bind";
+      delete _ctx.quizId;
+      delete _ctx.participantId;
+    }
   }
 }
 

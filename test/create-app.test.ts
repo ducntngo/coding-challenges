@@ -382,3 +382,232 @@ test("transport handler maps an invalid reconnect token to reconnect_rejected", 
     },
   ]);
 });
+
+test("session service disconnect marks the active participant as disconnected", async () => {
+  const sessionStore = new InMemorySessionStore();
+  const service = new StubQuizSessionService(
+    sessionStore,
+    new MockQuizDefinitionSource(),
+    {
+      participantIdGenerator: () => "participant-1",
+      reconnectTokenGenerator: () => "token-1",
+      sessionInstanceIdGenerator: () => "session-created-1",
+    },
+  );
+
+  const joined = await service.joinSession({
+    quizId: "demo-quiz",
+    displayName: "Alice",
+    connectionId: "connection-1",
+  });
+
+  await service.disconnectParticipant({
+    quizId: "demo-quiz",
+    participantId: joined.self.participantId,
+    connectionId: "connection-1",
+  });
+
+  const session = await sessionStore.getActiveSession("demo-quiz");
+
+  assert.ok(session);
+  assert.equal(session.snapshot.version, 3);
+  assert.deepEqual(session.snapshot.participants, [
+    {
+      participantId: "participant-1",
+      displayName: "Alice",
+      state: "disconnected",
+      score: 0,
+    },
+  ]);
+  assert.deepEqual(session.participantRecords, [
+    {
+      participantId: "participant-1",
+      displayName: "Alice",
+      state: "disconnected",
+      score: 0,
+      reconnectToken: "token-1",
+      joinOrder: 1,
+    },
+  ]);
+});
+
+test("session service ignores a stale disconnect after reconnect", async () => {
+  const sessionStore = new InMemorySessionStore();
+  const service = new StubQuizSessionService(
+    sessionStore,
+    new MockQuizDefinitionSource(),
+    {
+      participantIdGenerator: () => "participant-1",
+      reconnectTokenGenerator: () => "token-1",
+      sessionInstanceIdGenerator: () => "session-created-1",
+    },
+  );
+
+  const joined = await service.joinSession({
+    quizId: "demo-quiz",
+    displayName: "Alice",
+    connectionId: "connection-1",
+  });
+
+  await service.reconnectParticipant({
+    quizId: "demo-quiz",
+    reconnectToken: joined.self.reconnectToken,
+    connectionId: "connection-2",
+  });
+
+  await service.disconnectParticipant({
+    quizId: "demo-quiz",
+    participantId: joined.self.participantId,
+    connectionId: "connection-1",
+  });
+
+  const session = await sessionStore.getActiveSession("demo-quiz");
+
+  assert.ok(session);
+  assert.equal(session.snapshot.version, 3);
+  assert.deepEqual(session.snapshot.participants, [
+    {
+      participantId: "participant-1",
+      displayName: "Alice",
+      state: "active",
+      score: 0,
+    },
+  ]);
+  assert.deepEqual(session.participantRecords, [
+    {
+      participantId: "participant-1",
+      displayName: "Alice",
+      state: "active",
+      score: 0,
+      reconnectToken: "token-1",
+      connectionId: "connection-2",
+      joinOrder: 1,
+    },
+  ]);
+});
+
+test("transport handler forwards disconnect for a bound connection", async () => {
+  const sessionStore = new InMemorySessionStore();
+  const sessionService = new StubQuizSessionService(
+    sessionStore,
+    new MockQuizDefinitionSource(),
+    {
+      participantIdGenerator: () => "participant-1",
+      reconnectTokenGenerator: () => "token-1",
+      sessionInstanceIdGenerator: () => "session-created-1",
+    },
+  );
+  const transportCommandHandler = new DefaultTransportCommandHandler({
+    sessionService,
+    scoringService: new NoopScoringService(),
+  });
+  const ctx: ConnectionContext = {
+    connectionId: "connection-1",
+    state: "awaiting_bind",
+  };
+
+  await transportCommandHandler.handleMessage(
+    ctx,
+    JSON.stringify({
+      command: "session.join",
+      requestId: "req-join-disconnect-1",
+      payload: {
+        quizId: "demo-quiz",
+        displayName: "Alice",
+      },
+    }),
+  );
+
+  await transportCommandHandler.handleDisconnect(ctx);
+
+  const session = await sessionStore.getActiveSession("demo-quiz");
+
+  assert.equal(ctx.state, "awaiting_bind");
+  assert.equal(ctx.quizId, undefined);
+  assert.equal(ctx.participantId, undefined);
+  assert.ok(session);
+  assert.deepEqual(session.snapshot.participants, [
+    {
+      participantId: "participant-1",
+      displayName: "Alice",
+      state: "disconnected",
+      score: 0,
+    },
+  ]);
+});
+
+test("transport handler ignores a stale disconnect from a replaced connection", async () => {
+  const sessionStore = new InMemorySessionStore();
+  const sessionService = new StubQuizSessionService(
+    sessionStore,
+    new MockQuizDefinitionSource(),
+    {
+      participantIdGenerator: () => "participant-1",
+      reconnectTokenGenerator: () => "token-1",
+      sessionInstanceIdGenerator: () => "session-created-1",
+    },
+  );
+  const transportCommandHandler = new DefaultTransportCommandHandler({
+    sessionService,
+    scoringService: new NoopScoringService(),
+  });
+  const originalCtx: ConnectionContext = {
+    connectionId: "connection-1",
+    state: "awaiting_bind",
+  };
+
+  const joinedEvents = await transportCommandHandler.handleMessage(
+    originalCtx,
+    JSON.stringify({
+      command: "session.join",
+      requestId: "req-join-disconnect-2",
+      payload: {
+        quizId: "demo-quiz",
+        displayName: "Alice",
+      },
+    }),
+  );
+
+  const joinedPayload = joinedEvents[0]?.payload as {
+    self: {
+      reconnectToken: string;
+    };
+  };
+  const replacementCtx: ConnectionContext = {
+    connectionId: "connection-2",
+    state: "awaiting_bind",
+  };
+
+  await transportCommandHandler.handleMessage(
+    replacementCtx,
+    JSON.stringify({
+      command: "session.reconnect",
+      requestId: "req-reconnect-disconnect-1",
+      payload: {
+        quizId: "demo-quiz",
+        reconnectToken: joinedPayload.self.reconnectToken,
+      },
+    }),
+  );
+
+  await transportCommandHandler.handleDisconnect(originalCtx);
+
+  const session = await sessionStore.getActiveSession("demo-quiz");
+
+  assert.equal(originalCtx.state, "awaiting_bind");
+  assert.equal(originalCtx.quizId, undefined);
+  assert.equal(originalCtx.participantId, undefined);
+  assert.equal(replacementCtx.state, "bound");
+  assert.equal(replacementCtx.quizId, "demo-quiz");
+  assert.equal(replacementCtx.participantId, "participant-1");
+  assert.ok(session);
+  assert.equal(session.snapshot.version, 3);
+  assert.deepEqual(session.snapshot.participants, [
+    {
+      participantId: "participant-1",
+      displayName: "Alice",
+      state: "active",
+      score: 0,
+    },
+  ]);
+});
