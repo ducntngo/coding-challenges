@@ -16,6 +16,7 @@ This repository is for a coding challenge submission. Contributors, including AI
 
 - All commits must reach `main` through a pull request.
 - Each pull request should represent one coherent unit of work.
+- Prefer small, self-contained pull requests and avoid bundling unrelated or risky cross-cutting changes into one review.
 - Use descriptive branch names with a type prefix such as `feat/`, `fix/`, `chore/`, or `docs/`.
 - The repository uses squash merge, so each pull request should land as a single commit on `main`.
 - Keep each PR branch as one evolving commit. While iterating on an open PR, amend or re-squash the branch rather than accumulating many commits.

@@ -23,7 +23,10 @@ export function createApp(options: CreateAppOptions = {}): FastifyInstance {
 
   void app.register(async (transportApp) => {
     await transportApp.register(websocket);
-    registerTransportRoutes(transportApp, deps.transportCommandHandler);
+    registerTransportRoutes(transportApp, {
+      transportCommandHandler: deps.transportCommandHandler,
+      sessionProgressionNotifier: deps.sessionProgressionNotifier,
+    });
   });
 
   return app;

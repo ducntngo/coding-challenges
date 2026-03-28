@@ -106,6 +106,8 @@ export interface LeaderboardUpdatedPayload {
   readonly leaderboard: TransportSessionView["leaderboard"];
 }
 
+export type SessionSnapshotPayload = TransportSessionView;
+
 export function isKnownInboundCommand(
   command: string,
 ): command is InboundCommandName {

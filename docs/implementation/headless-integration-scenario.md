@@ -35,14 +35,16 @@ The scenario then validates these behaviors:
 
 The harness also includes a smaller rejection scenario:
 
-- a participant joins `demo-quiz`
-- the session phase is moved to `question_closed`
+- two participants join `demo-quiz`
+- the internal progression service moves the session phase to `question_closed`
+- both active clients receive a `session.snapshot` event with the closed phase
 - a later `answer.submit` attempt is rejected without mutating session state
 
 And another rejection scenario:
 
 - a participant joins `demo-quiz`
 - the internal progression service advances the session from `question-1` to `question-2`
+- the active client receives a `session.snapshot` event with the new question reference
 - a later `answer.submit` attempt for the previous question is rejected without mutating session state
 - a submission for the new active question is still accepted
 
@@ -64,6 +66,7 @@ The automated harness currently checks:
 - cross-session isolation throughout the sequence
 - rejection when a session is not in `question_open`
 - rejection when a submission targets a question other than the active `currentQuestionId`
+- `session.snapshot` delivery to active clients when progression closes or advances a question
 - successful acceptance after internal progression moves the active question forward
 
 ## Current Limitations
@@ -72,7 +75,7 @@ This scenario intentionally reflects the current implementation rather than the 
 
 - the scoring behavior is still deterministic and stubbed rather than timing-based
 - the current scaffold starts sessions in `question_open` because host-driven phase progression is not implemented yet
-- progression changes are not yet emitted to connected clients through transport events
+- progression changes are currently surfaced through an internal service and `session.snapshot` fanout rather than a host-facing transport command
 
 ## Expected Evolution
 
@@ -80,7 +83,7 @@ As the implementation deepens, this same scenario should grow rather than be rep
 
 Next planned additions:
 
-- duplicate and late-answer rejection scenarios once progression changes are surfaced through runtime events
+- duplicate and late-answer rejection scenarios on top of the current progression snapshot flow
 - richer scoring behavior behind the existing interfaces
 - more question-phase-aware answer handling
 

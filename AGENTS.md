@@ -18,6 +18,7 @@ This file defines how AI assistants should work in this repository. It is the pr
 
 - All changes must be submitted through a pull request before merging to `main`.
 - Prefer one pull request per coherent slice of work.
+- Prefer small, self-contained pull requests and avoid bundling unrelated or risky cross-cutting changes into one review.
 - Use descriptive branch names with a type prefix such as `feat/`, `fix/`, `chore/`, or `docs/`.
 - Pull requests should be squash-merged so each PR becomes one commit on `main`.
 - Keep each PR branch as one evolving commit. While a PR is in progress, amend or re-squash the branch instead of stacking many commits.

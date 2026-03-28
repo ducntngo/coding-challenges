@@ -4,7 +4,7 @@
 
 ## Status
 
-Active draft. The early automated headless integration harness now exists, covers accepted answer flow plus session-wide score and leaderboard fanout, and now also covers closed-phase and wrong-question rejection driven by real internal question progression. It should deepen further as scoring and transport-visible progression become real.
+Active draft. The early automated headless integration harness now exists, covers accepted answer flow plus session-wide score and leaderboard fanout, and now also covers closed-phase and wrong-question rejection driven by real internal question progression with transport-visible `session.snapshot` updates. It should deepen further as scoring behavior and richer rejection paths become real.
 
 Current scenario reference:
 
@@ -29,7 +29,7 @@ Finish verification, documentation, and submission-ready packaging.
 3. Drive multiple simulated players across concurrent quiz sessions through the real transport boundary.
 4. Stub or mock unfinished answer, scoring, or leaderboard behavior behind the existing interfaces until those modules are ready.
 5. Expand the same harness as answer handling and leaderboard updates become real.
-6. Add assertions for duplicate and late-answer rejection once progression changes are surfaced through the runtime flow.
+6. Add assertions for duplicate and late-answer rejection on top of the current `session.snapshot` progression flow.
 7. Keep the scenario headless and code-driven instead of building a full frontend for test coverage.
 8. Keep unit and integration suites separated so fast feedback and deeper end-to-end coverage can evolve independently.
 9. Treat the existing integration harness as the canonical place for new multi-client and cross-session scenarios instead of creating disconnected one-off flows.
