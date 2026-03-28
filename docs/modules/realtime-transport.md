@@ -181,6 +181,8 @@ Keep the first implementation centered on:
 - application-facing interfaces for session binding, answer submission, and snapshot retrieval
 - a serializer or mapper layer that turns application results into transport envelopes
 
+For the challenge implementation, a single Fastify plus WebSocket process is enough. In a real deployment, this boundary would usually sit behind a load balancer and add shared fanout or coordination infrastructure, such as Redis pub-sub, NATS, Kafka, or an equivalent managed service, so updates can reach the correct connections across multiple application instances.
+
 ## Implementation Handoff
 
 Build this module in this order:

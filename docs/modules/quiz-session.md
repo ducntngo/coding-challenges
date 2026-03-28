@@ -185,6 +185,8 @@ Minimum required capabilities:
 
 The important design requirement is atomicity at the session boundary. The first implementation may satisfy this with any simple single-writer or atomic-update approach. A future shared store may use a different concurrency-safe mechanism. The module contract should not depend on storage-specific details beyond that guarantee.
 
+For the challenge implementation, an in-memory store is acceptable because it keeps the code small and easy to explain. In a real deployment, this boundary would usually move to a proper shared or durable database, such as PostgreSQL or an equivalent system, with Redis or a similar low-latency coordination layer added only if cross-instance ownership or reconnect handling needs it.
+
 ## Required Invariants
 
 - at most one active live session instance exists for a `quizId`

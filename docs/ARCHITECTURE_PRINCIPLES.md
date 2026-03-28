@@ -165,6 +165,8 @@ The current implementation stack direction for the challenge build is:
 - `node:test` for the first unit-test guard rails
 - GitHub Actions for the first CI baseline
 
+These are challenge-sized implementation choices. In a real deployment, the process-local state would usually move to a proper shared or durable database, mocked quiz-definition access would be replaced by a real content store or service, real-time fanout would add cross-instance coordination, and operational plus analytical signals would be sent to dedicated observability and warehouse tooling.
+
 ## Core Runtime Rules
 
 ### Identity and reconnect
@@ -209,6 +211,8 @@ Important scaling implication:
 - one application instance may host many sessions
 - while live session state is only process-local, a given active session is effectively tied to one instance at a time
 - safe multi-instance handling of the same live session requires shared state and coordination
+
+In practical terms, that usually means replacing the in-memory store with a database-backed state boundary and adding shared coordination or pub-sub infrastructure so session ownership and fanout remain correct when more than one application instance is serving traffic.
 
 ## Reliability And Observability Expectations
 

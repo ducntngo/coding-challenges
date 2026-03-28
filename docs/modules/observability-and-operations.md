@@ -103,6 +103,8 @@ The first implementation should make these cases easy to diagnose:
 - score update throughput
 - error rates by event type
 
+In a real deployment, these signals would usually feed into concrete operational tools rather than staying abstract. A plausible stack would be Prometheus for metrics, VictoriaLogs or a similar centralized log system for runtime event retention and search, and an analytics warehouse such as BigQuery for longer-horizon product or behavioral analysis. Those concrete tooling choices are intentionally left out of the challenge implementation so the code stays submission-sized.
+
 These are useful in the final design discussion even if the challenge implementation only exposes a smaller subset.
 
 ## Operational Risks

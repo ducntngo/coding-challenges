@@ -111,6 +111,8 @@ After a rejected submission:
 - do not let persistence concerns dictate the scoring interface
 - prefer result objects that are easy to unit test and easy for transport to map into events
 
+In a real deployment, accepted-answer results and leaderboard changes would often also be copied into longer-lived storage and analytics systems. That might mean an operational database for auditability and replay, plus a warehouse such as BigQuery for aggregate analysis. Those integrations should remain downstream consumers of this module's outputs rather than drivers of its core scoring policy.
+
 ## Suggested Interface Shape
 
 Keep the first implementation centered on:
