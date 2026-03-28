@@ -28,10 +28,11 @@ The scenario then validates these behaviors:
 5. Carol submits an incorrect answer for `science-quiz` question `question-1`.
 6. The answer results mutate score and leaderboard state in the correct session only.
 7. The resulting score and leaderboard updates fan out to the other active participant in the same session.
-8. Alice reconnects on a replacement connection using her reconnect token.
-9. A later disconnect from Alice's older connection is treated as stale and does not evict the replacement connection.
-10. Bob disconnects from `demo-quiz`, and only his participant state changes to `disconnected`.
-11. `science-quiz` remains unchanged while disconnect activity happens in `demo-quiz`.
+8. A duplicate `answer.submit` attempt for the same participant-question pair is rejected and does not fan out to the passive participant.
+9. Alice reconnects on a replacement connection using her reconnect token.
+10. A later disconnect from Alice's older connection is treated as stale and does not evict the replacement connection.
+11. Bob disconnects from `demo-quiz`, and only his participant state changes to `disconnected`.
+12. `science-quiz` remains unchanged while disconnect activity happens in `demo-quiz`.
 
 The harness also includes a smaller rejection scenario:
 
@@ -57,6 +58,7 @@ The automated harness currently checks:
 - accepted `answer.submit` handling for the current stubbed scoring path
 - `participant.score.updated` and `leaderboard.updated` command results for the submitting client
 - session-wide fanout of the same two events to the other active participant in that session
+- duplicate-answer rejection without passive fanout
 - omission of `requestId` on passive fanout copies
 - leaderboard ordering within each session
 - session snapshot state after accepted answers
@@ -83,7 +85,7 @@ As the implementation deepens, this same scenario should grow rather than be rep
 
 Next planned additions:
 
-- duplicate and late-answer rejection scenarios on top of the current progression snapshot flow
+- richer late-answer rejection scenarios on top of the current duplicate and progression snapshot flow
 - richer scoring behavior behind the existing interfaces
 - more question-phase-aware answer handling
 
