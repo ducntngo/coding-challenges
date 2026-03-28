@@ -56,6 +56,7 @@ The automated harness currently checks:
 - successful `session.join` responses for all four clients
 - correct participant membership per session
 - accepted `answer.submit` handling for the current stubbed scoring path
+- score correctness resolved from quiz-definition accepted answers rather than a hard-coded transport sentinel
 - `participant.score.updated` and `leaderboard.updated` command results for the submitting client
 - session-wide fanout of the same two events to the other active participant in that session
 - duplicate-answer rejection without passive fanout
@@ -75,7 +76,7 @@ The automated harness currently checks:
 
 This scenario intentionally reflects the current implementation rather than the final target behavior.
 
-- the scoring behavior is still deterministic and stubbed rather than timing-based
+- the scoring behavior is still deterministic and fixed-score rather than timing-based, even though correctness now comes from quiz-definition answer data
 - the current scaffold starts sessions in `question_open` because host-driven phase progression is not implemented yet
 - progression changes are currently surfaced through an internal service and `session.snapshot` fanout rather than a host-facing transport command
 
