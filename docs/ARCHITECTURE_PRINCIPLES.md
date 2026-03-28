@@ -152,6 +152,19 @@ Owns persistence or retrieval of live session and participant state through an a
 
 Provides quiz and question data. For the challenge implementation, this may be mocked or seeded.
 
+## Current Implementation Stack Direction
+
+The current implementation stack direction for the challenge build is:
+
+- Node.js LTS runtime
+- TypeScript codebase
+- Fastify as the HTTP application shell
+- WebSocket transport using explicit JSON command and event envelopes
+- `@fastify/websocket` as the first integration path for the WebSocket boundary
+- in-memory state and mocked quiz-definition access behind interfaces
+- `node:test` for the first unit-test guard rails
+- GitHub Actions for the first CI baseline
+
 ## Core Runtime Rules
 
 ### Identity and reconnect
@@ -212,7 +225,7 @@ The implementation should be designed so later module work can support:
 The following are still intentionally open and should be resolved later without changing the current architecture boundary:
 
 - exact speed-based scoring formula
-- exact runtime stack and transport choice
+- exact version pins and project scripts for the chosen stack
 - exact event names and payload schema
 - exact future scalable backing store choice
 

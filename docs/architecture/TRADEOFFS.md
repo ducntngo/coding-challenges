@@ -176,6 +176,49 @@ Implement leaderboard ranking through a replaceable ranking policy. Use total sc
 - adds a small amount of abstraction
 - still leaves the exact long-term preferred ranking policy open
 
+## Tradeoff 9: Familiar Typed Backend Stack Vs Broader Stack Optionality
+
+### Choice
+
+Pick a concrete implementation stack now, or keep the project stack-agnostic longer.
+
+### Chosen Direction
+
+Use Node.js LTS with TypeScript and Fastify for the challenge implementation.
+
+### Why
+
+- aligns with the interface-first module design already documented
+- keeps local development, CI, and demo setup simple
+- makes transport and domain contracts explicit in code
+- gives a clean HTTP shell for health endpoints and future composition boundaries
+
+### Cost
+
+- narrows future implementation flexibility earlier
+- pushes more correctness and concurrency discipline into application code instead of framework defaults
+
+## Tradeoff 10: Explicit WebSocket Protocol Vs Higher-Level Realtime Abstraction
+
+### Choice
+
+Use explicit WebSocket command and event envelopes, or adopt a higher-level realtime abstraction with built-in client semantics.
+
+### Chosen Direction
+
+Use a WebSocket transport with explicit JSON envelopes, integrated into the server through `@fastify/websocket`.
+
+### Why
+
+- fits the transport contract already documented in `docs/modules/realtime-transport.md`
+- keeps reconnect, rejection, and event semantics owned by application code
+- stays easier to explain in the design write-up than a more opinionated transport layer
+
+### Cost
+
+- requires more manual message handling and mapping
+- leaves convenience features such as automatic client retry semantics out of scope for the first implementation
+
 ## Open Tradeoffs
 
 - exact scoring formula for correct answers `[needs verification]`
