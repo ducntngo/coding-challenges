@@ -55,6 +55,8 @@ Use `2026-03-27-01-doc-scaffolding.md` as the baseline style. The content should
 - the nature of prompts or interactions
 - what verification, testing, debugging, or refinement was performed
 
+For new entries, prefer copying `docs/ai-usage/TEMPLATE.md` and then filling in the details instead of starting from scratch.
+
 ## Relationship To Final Submission
 
 These logs are working notes. Later, they will be condensed into the final AI collaboration document for the submission package.

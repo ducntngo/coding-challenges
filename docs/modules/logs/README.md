@@ -27,3 +27,7 @@ Use module logs to capture:
 ## Status
 
 Active. Module working logs should be added or updated whenever a module design pass changes durable assumptions, boundaries, or resume context.
+
+## Template
+
+Use `docs/modules/logs/TEMPLATE.md` as the default starting point for new module working records.
