@@ -8,7 +8,7 @@ This file is active and should be kept current through implementation and verifi
 
 ## Current Snapshot
 
-Repository state is now in early implementation. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and the first guard-rail tests. The project is moving from stage 3 foundation work into stage 4 participation flow implementation.
+Repository state is now in early implementation. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The first real participation slice is now in place for `session.join`, and the project is moving deeper into stage 4 with reconnect and disconnect handling next.
 
 ## Completed
 
@@ -43,18 +43,22 @@ Repository state is now in early implementation. The design baseline is stable, 
 - Added in-memory and mocked foundation adapters behind those interfaces
 - Added initial guard-rail tests for health response and transport bound-state rejection behavior
 - Verified the scaffold with local typecheck, test, and build runs
+- Implemented `joinSession` behind the session and store interfaces
+- Implemented transport-side `session.join` handling, success acknowledgement mapping, and connection binding updates
+- Added tests for session join success, join rejection, and transport binding behavior
+- Verified the join slice with local typecheck, test, and build runs
 
 ## In Progress
 
-- Moving from the completed foundation scaffold into the first usable participation slice
-- Keeping join, reconnect, disconnect, and scoring behavior behind the established interfaces while the implementations deepen
+- Moving from the first working join slice into reconnect and disconnect handling
+- Keeping reconnect, answer acceptance, and scoring behavior behind the established interfaces while the implementations deepen
 
 ## Next Recommended Steps
 
-1. Implement `joinSession` behind the existing session and store interfaces.
-2. Map `session.join` to a successful transport acknowledgement and snapshot payload.
-3. Bind successful joins to the connection context and cover that with tests.
-4. Implement `session.reconnect` and next disconnect handling behind the same seams.
+1. Implement `session.reconnect` behind the existing session and store interfaces.
+2. Implement disconnect forwarding and stale-disconnect-safe handling.
+3. Add tests for reconnect success, invalid token rejection, and disconnect behavior.
+4. Start the first accepted `answer.submit` path behind the existing transport and scoring seams.
 5. Keep `docs/ai-usage/` updated as work lands in commits.
 
 ## Open Decisions
@@ -65,7 +69,6 @@ Repository state is now in early implementation. The design baseline is stable, 
 - Exact scalable backing store choice for the future production path
 - Exact transport-visible shape of incremental score and leaderboard events
 - Exact logs and metrics set to keep in the challenge implementation versus in the design-only discussion
-- Exact join or reconnect success payload field list beyond the current snapshot baseline
 - Exact rejection code set for duplicate, late, and wrong-question submissions
 
 ## Open-Question Review Outcome
@@ -126,6 +129,8 @@ Intentional deferrals:
 - Lightweight CI runs `npm ci`, `npm run typecheck`, and `npm test`
 - The foundation scaffold exposes `GET /health` returning `status`, `service`, and `timestamp`
 - The current session-phase baseline is `lobby`, `question_open`, `question_closed`, and `finished`
+- `session.join` now returns participant binding data plus the current snapshot and binds the connection context on success
+- The current join success payload shape is `session`, `self`, `participants`, and `leaderboard`
 
 ## Current Guidance
 
@@ -133,7 +138,7 @@ Use the completed module contracts plus the stage-3 scaffold as the baseline. St
 
 ## Known Gaps
 
-- `session.join`, `session.reconnect`, and answer acceptance are still stubbed
+- `session.reconnect` and answer acceptance are still stubbed
 - No end-to-end successful WebSocket participation flow exists yet
 - No scoring or leaderboard mutation path exists yet
 - No richer observability hooks exist beyond the minimal health surface and app logging
@@ -160,8 +165,8 @@ Any new session should start by reading:
 Tomorrow's intended entry point:
 
 - active focus: `stage 4 participation flow implementation`
-- first unresolved topic: implement `session.join` and successful transport binding
-- next unresolved topics: reconnect flow, disconnect handling, and richer participation tests
+- first unresolved topic: implement `session.reconnect`
+- next unresolved topics: disconnect handling, answer acceptance, and richer participation tests
 
 ## Verification History
 
@@ -179,3 +184,4 @@ Tomorrow's intended entry point:
 - Updated the stage-3 plan to require a simple CI pipeline immediately after stack selection
 - Reviewed official Node.js and Fastify documentation before selecting the initial implementation stack
 - Verified the foundation scaffold locally with `npm run typecheck`, `npm test`, and `npm run build`
+- Verified the join slice locally with `npm run typecheck`, `npm test`, and `npm run build`

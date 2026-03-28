@@ -29,15 +29,19 @@ This repository is for a coding challenge submission. Contributors, including AI
 
 1. Update or confirm the relevant design doc.
 2. Implement one coherent slice.
-3. Run the smallest useful verification commands.
-4. Update implementation status.
-5. Prepare the repo for the next contributor to continue without re-discovery.
+3. Keep the code change small and pair behavior changes with clear tests.
+4. Run the smallest useful verification commands.
+5. Update implementation status.
+6. Prepare the repo for the next contributor to continue without re-discovery.
 
 ## Code Standards
 
 - Keep modules small and single-purpose.
+- Keep code changes small enough that reviewers can understand them without rediscovery.
 - Separate domain logic from I/O and framework-specific code.
 - Add tests for scoring, ranking, session state, and protocol handling.
+- Treat tests as part of the implementation slice, especially for behavior changes.
+- If a useful test cannot be added yet, call that out explicitly in the PR or status update.
 - Favor deterministic behavior and explicit error handling.
 - Follow the selected stage-3 stack unless a change is explicitly approved and documented.
 

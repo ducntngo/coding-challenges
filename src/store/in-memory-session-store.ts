@@ -11,6 +11,7 @@ const demoSession: SessionAggregate = {
     participants: [],
     leaderboard: [],
   },
+  participantRecords: [],
 };
 
 export class InMemorySessionStore implements SessionStore {

@@ -13,6 +13,12 @@ export interface ParticipantSummary {
   readonly score: number;
 }
 
+export interface ParticipantRecord extends ParticipantSummary {
+  readonly reconnectToken: string;
+  readonly connectionId?: string;
+  readonly joinOrder: number;
+}
+
 export interface LeaderboardEntry {
   readonly participantId: string;
   readonly displayName: string | null;
@@ -32,6 +38,20 @@ export interface SessionSnapshot {
 
 export interface SessionAggregate {
   readonly snapshot: SessionSnapshot;
+  readonly participantRecords: readonly ParticipantRecord[];
+}
+
+export interface SessionBinding {
+  readonly participantId: string;
+  readonly displayName: string | null;
+  readonly state: ParticipantState;
+  readonly score: number;
+  readonly reconnectToken: string;
+}
+
+export interface SessionBindingResult {
+  readonly snapshot: SessionSnapshot;
+  readonly self: SessionBinding;
 }
 
 export interface JoinSessionInput {
@@ -52,8 +72,17 @@ export interface DisconnectParticipantInput {
 }
 
 export interface QuizSessionService {
-  joinSession(input: JoinSessionInput): Promise<SessionSnapshot>;
-  reconnectParticipant(input: ReconnectParticipantInput): Promise<SessionSnapshot>;
+  joinSession(input: JoinSessionInput): Promise<SessionBindingResult>;
+  reconnectParticipant(
+    input: ReconnectParticipantInput,
+  ): Promise<SessionBindingResult>;
   disconnectParticipant(input: DisconnectParticipantInput): Promise<void>;
   getSessionSnapshot(quizId: string): Promise<SessionSnapshot | null>;
+}
+
+export class SessionJoinRejectedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "SessionJoinRejectedError";
+  }
 }

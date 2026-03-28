@@ -33,8 +33,9 @@ This file defines how AI assistants should work in this repository. It is the pr
 2. Review the relevant module design docs before editing code.
 3. Update design docs if implementation changes the plan materially.
 4. Implement the smallest complete slice possible.
-5. Verify with tests or other explicit checks.
-6. Update `docs/IMPLEMENTATION_STATUS.md` with what changed, what is next, and any open risks.
+5. Keep code changes small and pair each behavior change with clear tests.
+6. Verify with tests or other explicit checks.
+7. Update `docs/IMPLEMENTATION_STATUS.md` with what changed, what is next, and any open risks.
 
 ## AI Usage Rules
 
@@ -90,6 +91,9 @@ This file defines how AI assistants should work in this repository. It is the pr
 ## Coding Rules
 
 - Optimize for clarity and maintainability over premature complexity.
+- Keep code changes small enough to review quickly and verify confidently.
+- Treat tests as part of the change, not optional follow-up work.
+- Every behavior-changing code slice should have clear tests or an explicit reason why a useful test does not exist yet.
 - Do not lock in a tech stack prematurely; language, framework, and transport choices should be decided in the later planning stage.
 - Keep external dependencies minimal unless they materially improve delivery speed or correctness.
 - Make real-time events explicit and versionable.
