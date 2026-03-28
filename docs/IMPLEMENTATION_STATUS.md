@@ -8,7 +8,7 @@ This file is active and should be kept current, but some referenced design docs 
 
 ## Current Snapshot
 
-Repository state is still pre-implementation. The documentation scaffold is merged, the stable architecture baseline is defined, and stable first-pass module contracts now exist for all planned modules. The open-question review is complete, no architecture blocker currently prevents stack selection, and the project is moving into stage 3 with an explicit plan to scaffold interfaces, mocks, and skeletal tests before deep implementation.
+Repository state is still pre-implementation. The documentation scaffold is merged, the stable architecture baseline is defined, and stable first-pass module contracts now exist for all planned modules. The open-question review is complete, no architecture blocker currently prevents stack selection, and the project is moving into stage 3 with an explicit plan to choose the stack, add simple CI, then scaffold interfaces, mocks, and skeletal tests before deep implementation.
 
 ## Completed
 
@@ -32,19 +32,21 @@ Repository state is still pre-implementation. The documentation scaffold is merg
 - Refined `docs/modules/observability-and-operations.md` into a stable first-pass module contract
 - Added a module working-log entry for the `observability-and-operations` decision set
 - Reviewed the tagged open questions and recorded the review outcome for stack-selection readiness
+- Updated governance docs to require short type tags in commit subjects
 
 ## In Progress
 
 - Moving from completed design work into stack selection and interface scaffolding prep
-- Keeping placeholder module docs explicit until each one is refined
+- Keeping the remaining implementation-plan placeholders explicit until they are refined
 
 ## Next Recommended Steps
 
 1. Choose the stack and project structure.
-2. Settle the remaining payload-shape and health-surface details that affect scaffolding.
-3. Scaffold all planned interfaces and mock integrations before deep implementation work.
-4. Add skeletal tests around those seams as early guard rails.
-5. Keep `docs/ai-usage/` updated as work lands in commits.
+2. Add a simple CI pipeline immediately after the stack is chosen.
+3. Settle the remaining payload-shape and health-surface details that affect scaffolding.
+4. Scaffold all planned interfaces and mock integrations before deep implementation work.
+5. Add skeletal tests around those seams as early guard rails.
+6. Keep `docs/ai-usage/` updated as work lands in commits.
 
 ## Open Decisions
 
@@ -113,19 +115,20 @@ Intentional deferrals:
 
 ## Current Guidance
 
-Use the completed first-pass module contracts and the open-question review outcome as the reference baseline for stage 3. Stable module docs should stay concise but include interface-first build steps and unit-test guard rails for the later implementation pass.
+Use the completed first-pass module contracts and the open-question review outcome as the reference baseline for stage 3. The intended sequence is stack selection, simple CI setup, interface scaffolding, mocked seams, then skeletal tests and deeper implementation. Stable module docs should stay concise but include interface-first build steps and unit-test guard rails for the later implementation pass.
 
 ## Known Gaps
 
 - No source code yet
 - No tests yet
 - No runnable local setup yet
+- No CI pipeline yet
 - No interface scaffold or mocked integration seams yet
 - No stack has been selected yet
 
 ## Current Module Focus
 
-- Active focus: `stage 3 stack selection`
+- Active focus: `stage 3 stack selection and CI planning`
 
 ## Handoff Notes
 
@@ -144,9 +147,9 @@ Any new session should start by reading:
 
 Tomorrow's intended entry point:
 
-- active focus: `stage 3 stack selection`
+- active focus: `stage 3 stack selection and CI planning`
 - first unresolved topic: choose the runtime, transport approach, and project structure
-- next unresolved topics: finalize scaffold-affecting payload and health-surface details
+- next unresolved topics: add simple CI for the chosen stack, then finalize scaffold-affecting payload and health-surface details
 
 ## Verification History
 
@@ -160,3 +163,5 @@ Tomorrow's intended entry point:
 - Reviewed scoring-related architecture notes before refining the `scoring-and-leaderboard` module boundary
 - Reviewed the existing observability placeholder and runtime flow expectations before refining the observability contract
 - Reviewed all tagged open questions and recorded which items are stack-blocking, stage-3, or intentionally deferred
+- Rechecked governance docs and aligned commit-subject rules across `AGENTS.md` and `CONTRIBUTING.md`
+- Updated the stage-3 plan to require a simple CI pipeline immediately after stack selection
