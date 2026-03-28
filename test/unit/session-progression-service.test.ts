@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { buildDefaultDependencies } from "../../src/app/dependencies";
+import { MockQuizDefinitionSource } from "../../src/quiz-source/mock-quiz-definition-source";
+import { StubQuizSessionService } from "../../src/session/stub-quiz-session-service";
 import type { SessionProgressionEvent } from "../../src/session/session-progression-events";
+import type { SessionAggregate } from "../../src/session/contracts";
+import type { SessionStore } from "../../src/store/contracts";
 
 test("session progression advances to the next question and then finishes", async () => {
   const deps = buildDefaultDependencies();
@@ -60,3 +64,113 @@ test("session progression publishes snapshot updates for transport subscribers",
     "question-2",
   );
 });
+
+test("session service records question-open time for a new session", async () => {
+  const sessionStore = new InMemoryTestSessionStore();
+  const sessionService = new StubQuizSessionService(
+    sessionStore,
+    new MockQuizDefinitionSource(),
+    {
+      now: () => 1_000,
+      participantIdGenerator: () => "participant-1",
+      reconnectTokenGenerator: () => "token-1",
+      sessionInstanceIdGenerator: () => "session-1",
+    },
+  );
+
+  await sessionService.joinSession({
+    quizId: "demo-quiz",
+    displayName: "Alice",
+    connectionId: "connection-1",
+  });
+
+  const session = await sessionStore.getActiveSession("demo-quiz");
+
+  assert.ok(session);
+  assert.equal(session.currentQuestionOpenedAtMs, 1_000);
+});
+
+test("session service refreshes question-open time for the first seeded participant", async () => {
+  const sessionStore = new (await import("../../src/store/in-memory-session-store.js")).InMemorySessionStore();
+  const sessionService = new StubQuizSessionService(
+    sessionStore,
+    new MockQuizDefinitionSource(),
+    {
+      now: () => 1_000,
+      participantIdGenerator: () => "participant-1",
+      reconnectTokenGenerator: () => "token-1",
+      sessionInstanceIdGenerator: () => "session-1",
+    },
+  );
+
+  await sessionService.joinSession({
+    quizId: "demo-quiz",
+    displayName: "Alice",
+    connectionId: "connection-1",
+  });
+
+  const session = await sessionStore.getActiveSession("demo-quiz");
+
+  assert.ok(session);
+  assert.equal(session.currentQuestionOpenedAtMs, 1_000);
+});
+
+test("session progression preserves and refreshes question-open time", async () => {
+  const sessionStore = new InMemoryTestSessionStore();
+  const sessionService = new StubQuizSessionService(
+    sessionStore,
+    new MockQuizDefinitionSource(),
+    {
+      now: () => 1_000,
+      participantIdGenerator: () => "participant-1",
+      reconnectTokenGenerator: () => "token-1",
+      sessionInstanceIdGenerator: () => "session-1",
+    },
+  );
+
+  await sessionService.joinSession({
+    quizId: "demo-quiz",
+    displayName: "Alice",
+    connectionId: "connection-1",
+  });
+
+  const progressionService = new (await import("../../src/session/stub-session-progression-service.js")).StubSessionProgressionService(
+    sessionStore,
+    new MockQuizDefinitionSource(),
+    undefined,
+    () => 2_000,
+  );
+
+  await progressionService.closeCurrentQuestion("demo-quiz");
+
+  const closedSession = await sessionStore.getActiveSession("demo-quiz");
+
+  assert.ok(closedSession);
+  assert.equal(closedSession.currentQuestionOpenedAtMs, 1_000);
+
+  await progressionService.advanceToNextQuestion("demo-quiz");
+
+  const advancedSession = await sessionStore.getActiveSession("demo-quiz");
+
+  assert.ok(advancedSession);
+  assert.equal(advancedSession.currentQuestionOpenedAtMs, 2_000);
+
+  await progressionService.advanceToNextQuestion("demo-quiz");
+
+  const finishedSession = await sessionStore.getActiveSession("demo-quiz");
+
+  assert.ok(finishedSession);
+  assert.equal(finishedSession.currentQuestionOpenedAtMs, null);
+});
+
+class InMemoryTestSessionStore implements SessionStore {
+  private readonly sessions = new Map<string, SessionAggregate>();
+
+  async getActiveSession(quizId: string): Promise<SessionAggregate | null> {
+    return this.sessions.get(quizId) ?? null;
+  }
+
+  async saveSession(session: SessionAggregate): Promise<void> {
+    this.sessions.set(session.snapshot.quizId, session);
+  }
+}

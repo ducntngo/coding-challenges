@@ -41,6 +41,16 @@ This module is not responsible for:
 - leaderboard ordering must remain stable and documented
 - duplicate, late, or otherwise invalid submissions must be handled explicitly
 
+## Current First-Pass Policy
+
+The current implementation uses a deliberately simple timing model behind the scoring seam:
+
+- correctness still comes from quiz-definition answer data
+- speed is measured from the server-observed question-open timestamp to the server-observed answer receive timestamp
+- correct answers currently get a short full-score grace window and then linearly decay to a positive floor
+- the exact timing constants should remain easy to tune behind the score policy without forcing transport or session-shape changes
+- late-answer rejection still belongs to session or question context, not to the positive-score calculation itself
+
 ## Accepted Vs Rejected Submission Semantics
 
 Use this distinction:
@@ -121,6 +131,6 @@ Build this module in this order:
 
 ## Open Questions
 
-- exact positive scoring formula for correct answers `[needs verification]`
+- whether the current grace window, decay window, and positive floor should remain unchanged for the final submission `[questionable]`
 - exact rejection code set for late, duplicate, and invalid-question submissions `[needs verification]`
 - whether transport needs both incremental score updates and full leaderboard snapshots after every accepted answer `[questionable]`

@@ -13,6 +13,7 @@ export class StubSessionProgressionService implements SessionProgressionService 
     private readonly sessionStore: SessionStore,
     private readonly quizDefinitionSource: QuizDefinitionSource,
     private readonly sessionProgressionNotifier?: SessionProgressionNotifier,
+    private readonly now: () => number = Date.now,
   ) {}
 
   async closeCurrentQuestion(quizId: string): Promise<SessionSnapshot> {
@@ -53,6 +54,7 @@ export class StubSessionProgressionService implements SessionProgressionService 
       sessionInstanceId: existingSession.snapshot.sessionInstanceId,
       phase: "question_closed",
       currentQuestionId: existingSession.snapshot.currentQuestionId,
+      currentQuestionOpenedAtMs: existingSession.currentQuestionOpenedAtMs,
     });
 
     await this.sessionStore.saveSession(nextSession);
@@ -103,6 +105,8 @@ export class StubSessionProgressionService implements SessionProgressionService 
       sessionInstanceId: existingSession.snapshot.sessionInstanceId,
       phase: nextQuestionId === null ? "finished" : "question_open",
       currentQuestionId: nextQuestionId,
+      currentQuestionOpenedAtMs:
+        nextQuestionId === null ? null : this.now(),
     });
 
     await this.sessionStore.saveSession(nextSession);

@@ -57,6 +57,7 @@ The automated harness currently checks:
 - correct participant membership per session
 - accepted `answer.submit` handling for the current stubbed scoring path
 - score correctness resolved from quiz-definition accepted answers rather than a hard-coded transport sentinel
+- the current scoring implementation is timing-based, but the harness still exercises only the fast-path full-score branch today
 - `participant.score.updated` and `leaderboard.updated` command results for the submitting client
 - session-wide fanout of the same two events to the other active participant in that session
 - duplicate-answer rejection without passive fanout
@@ -76,7 +77,7 @@ The automated harness currently checks:
 
 This scenario intentionally reflects the current implementation rather than the final target behavior.
 
-- the scoring behavior is still deterministic and fixed-score rather than timing-based, even though correctness now comes from quiz-definition answer data
+- the scoring behavior is now deterministic and timing-based, but the current harness does not yet cover slower-answer score decay or any timing-driven late-answer edge
 - the current scaffold starts sessions in `question_open` because host-driven phase progression is not implemented yet
 - progression changes are currently surfaced through an internal service and `session.snapshot` fanout rather than a host-facing transport command
 
@@ -87,7 +88,7 @@ As the implementation deepens, this same scenario should grow rather than be rep
 Next planned additions:
 
 - richer late-answer rejection scenarios on top of the current duplicate and progression snapshot flow
-- richer scoring behavior behind the existing interfaces
+- a deterministic slower-answer scoring case through the real transport boundary
 - more question-phase-aware answer handling
 
 ## Reviewer Guidance

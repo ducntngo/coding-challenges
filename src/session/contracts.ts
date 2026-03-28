@@ -41,6 +41,7 @@ export interface SessionSnapshot {
 export interface SessionAggregate {
   readonly snapshot: SessionSnapshot;
   readonly participantRecords: readonly ParticipantRecord[];
+  readonly currentQuestionOpenedAtMs: number | null;
 }
 
 export interface SessionBinding {

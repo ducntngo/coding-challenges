@@ -8,7 +8,7 @@ This file is active and should be kept current through implementation and verifi
 
 ## Current Snapshot
 
-Repository state is now in early implementation. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The first real participation slices are now in place for `session.join`, `session.reconnect`, disconnect forwarding, accepted `answer.submit`, internal question progression, and transport-visible `session.snapshot` fanout when progression changes session state. The current scoring seam now resolves correctness from quiz-definition answer data instead of a hard-coded transport-level sentinel string, while still using the intentionally simple fixed-score formula. The headless WebSocket integration harness now covers concurrent sessions, session-wide score or leaderboard fanout, duplicate-answer rejection without passive fanout, closed-phase answer rejection with progression snapshots, and wrong-question rejection using explicit current-question context in the session snapshot. The next step is to deepen the score formula itself and extend late-answer coverage while keeping the same harness green.
+Repository state is now in early implementation. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The first real participation slices are now in place for `session.join`, `session.reconnect`, disconnect forwarding, accepted `answer.submit`, internal question progression, and transport-visible `session.snapshot` fanout when progression changes session state. The current scoring seam now resolves correctness from quiz-definition answer data and applies a simple server-observed linear timing formula backed by question-open timestamps in session state. The headless WebSocket integration harness now covers concurrent sessions, session-wide score or leaderboard fanout, duplicate-answer rejection without passive fanout, closed-phase answer rejection with progression snapshots, and wrong-question rejection using explicit current-question context in the session snapshot. The next step is to extend late-answer coverage while keeping the current scoring baseline and harness green.
 
 ## Completed
 
@@ -94,24 +94,30 @@ Repository state is now in early implementation. The design baseline is stable, 
 - Threaded the accepted answer through the existing `ScoringService` seam without thickening transport
 - Added unit coverage for correct and incorrect scoring against quiz-definition answer data
 - Verified the scoring-answer-data slice locally with `npm test` and `npm run build`
+- Added `currentQuestionOpenedAtMs` to authoritative session state so scoring can use server-observed question timing without transport changes
+- Preserved question-open timing through accepted answers, closed questions, next-question progression, reconnect, and disconnect updates
+- Refreshed seeded empty-session timing on the first real participant join so idle process time does not silently decay the first answer
+- Replaced the fixed-score stub with a simple linear timing policy: short full-score grace window, then linear decay to a positive floor for correct answers
+- Added unit coverage for question-open timing persistence, seeded-session refresh, linear score decay, and the late-answer score floor
+- Verified the linear-scoring-timing slice locally with `npm test` and `npm run build`
 
 ## In Progress
 
-- Moving from quiz-backed answer correctness into deeper score-formula behavior and richer late-answer coverage
-- Keeping scoring behavior and answer-result mapping behind the established interfaces while the implementations deepen, while expanding the existing harness instead of replacing it
+- Closing the remaining stage-5 gap around richer late-answer coverage on top of the current duplicate, closed-phase, and wrong-question rejection paths
+- Keeping scoring behavior and answer-result mapping behind the established interfaces while the existing harness grows instead of being replaced
 
 ## Next Recommended Steps
 
-1. Deepen the score formula behind the current `ScoringService` seam now that correctness comes from quiz-definition answer data.
-2. Expand late-answer coverage further on top of the current duplicate, closed-phase, and wrong-question rejection scenarios.
-3. Keep the `session.snapshot`, session-wide score fanout, duplicate rejection, phase rejection, and wrong-question rejection paths covered as scoring behavior changes.
+1. Expand late-answer coverage further on top of the current duplicate, closed-phase, and wrong-question rejection scenarios.
+2. Keep the simple linear scoring baseline stable while the late-answer harness coverage deepens.
+3. Keep the `session.snapshot`, session-wide score fanout, duplicate rejection, phase rejection, and wrong-question rejection paths covered as late-answer behavior grows.
 4. Keep the unit and integration suites separate as coverage grows.
 5. Keep `docs/ai-usage/` updated as work lands in commits.
 
 ## Open Decisions
 
 - Exact event names and payload schema
-- Exact speed-based scoring formula
+- Whether the current linear scoring constants should remain unchanged for the final submission
 - Exact reconnect retention TTL and inactive-session cleanup thresholds
 - Exact scalable backing store choice for the future production path
 - Exact transport-visible shape of incremental score and leaderboard events
@@ -194,6 +200,7 @@ Intentional deferrals:
 - internal session progression can now close the current question, advance to the next question, and finish after the last question
 - internal session progression now fans out `session.snapshot` updates to the active connections in the same quiz session
 - scoring correctness is now resolved from quiz-definition accepted answers instead of a hard-coded scoring sentinel
+- the current default score policy uses server-observed question-open and answer-receive timestamps, with a short full-score grace window followed by linear decay to a positive floor
 
 ## Current Guidance
 
@@ -201,7 +208,7 @@ Use the completed module contracts plus the stage-3 scaffold as the baseline. St
 
 ## Known Gaps
 
-- the current scoring behavior still uses an intentionally simple fixed-score formula and does not yet implement the final timing-based model
+- the current scoring behavior now uses an intentionally simple linear timing model, but the constants are still lightweight challenge defaults rather than a deeply tuned formula
 - progression is visible through transport snapshots, but there is still no host-facing progression command in the current scaffold
 - richer late-answer scenarios are not yet covered beyond the current closed-phase and wrong-question progression paths
 - No richer observability hooks exist beyond the minimal health surface and app logging
@@ -228,8 +235,8 @@ Any new session should start by reading:
 Tomorrow's intended entry point:
 
 - active focus: `stage 5 scoring and leaderboard implementation`
-- first unresolved topic: deepen the score formula behind the `ScoringService` seam
- - next unresolved topics: add richer late-answer scenarios, and preserve the new `session.snapshot` fanout path while scoring evolves
+- first unresolved topic: add richer late-answer scenarios on top of the current progression snapshot path
+- next unresolved topics: preserve the current linear scoring baseline and keep the `session.snapshot` fanout path covered while stage 5 closes
 
 ## Verification History
 
@@ -258,4 +265,5 @@ Tomorrow's intended entry point:
 - Verified the question-progression slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`
 - Verified the progression-snapshot-fanout slice locally with `npm run typecheck`, `npm test`, and `npm run build`
 - Verified the rejection-harness-coverage slice locally with `npm run test:integration`
+- Verified the linear-scoring-timing slice locally with `npm test` and `npm run build`
 - Verified the scoring-answer-data slice locally with `npm test` and `npm run build`

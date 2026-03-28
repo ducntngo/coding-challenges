@@ -44,24 +44,36 @@ export interface AppDependencies {
   readonly transportCommandHandler: TransportCommandHandler;
 }
 
-export function buildDefaultDependencies(): AppDependencies {
+export interface BuildDefaultDependenciesOptions {
+  readonly now?: () => number;
+}
+
+export function buildDefaultDependencies(
+  options: BuildDefaultDependenciesOptions = {},
+): AppDependencies {
+  const now = options.now ?? Date.now;
   const quizDefinitionSource = new MockQuizDefinitionSource();
   const sessionStore = new InMemorySessionStore();
   const sessionProgressionNotifier = new InMemorySessionProgressionNotifier();
   const sessionService = new StubQuizSessionService(
     sessionStore,
     quizDefinitionSource,
+    {
+      now,
+    },
   );
   const progressionService = new StubSessionProgressionService(
     sessionStore,
     quizDefinitionSource,
     sessionProgressionNotifier,
+    now,
   );
   const scoringService = new StubScoringService();
   const answerSubmissionService = new StubAnswerSubmissionService(
     sessionStore,
     quizDefinitionSource,
     scoringService,
+    now,
   );
   const transportCommandHandler = new DefaultTransportCommandHandler({
     sessionService,
