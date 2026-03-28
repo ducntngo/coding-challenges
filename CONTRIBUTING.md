@@ -21,6 +21,7 @@ This repository is for a coding challenge submission. Contributors, including AI
 - While iterating on an open PR, prefer amending the existing branch commit rather than accumulating many commits.
 - Do not merge direct commits to `main`.
 - Every pull request must include at least one AI usage diary entry in `docs/ai-usage/`.
+- Use a short type tag in commit subjects such as `[feat]`, `[fix]`, `[chore]`, or `[docs]`.
 - Keep commit subjects easy to read and at or under 50 characters when practical.
 - Put extra explanation in the commit body instead of overloading the subject line.
 

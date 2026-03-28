@@ -21,6 +21,7 @@ Implement the backend real-time quiz server as the primary component. Mock the r
 - Separate design decisions from implementation decisions so the stack is chosen only after the functional boundary is clear.
 - Once a module boundary is stable, document a short implementation handoff so a later agent can build with minimal rediscovery.
 - After the design pass is stable, move into interface-first scaffolding before deep implementation work.
+- After stack selection, add a simple CI pipeline before deeper implementation so the initial scaffold has an automated check path.
 - Put all planned module seams in place early, using mocks or placeholders where downstream pieces are not ready yet.
 - Add bare-bones tests as soon as the seams exist so they act as guard rails while implementations deepen.
 - Treat the markdown docs as the planning surface and keep them synchronized with real progress.
@@ -55,10 +56,11 @@ The immediate focus is still layer 1. The objective is to remove ambiguity befor
 Within layer 2, the implementation sequence should be:
 
 1. choose the stack after the design and open-question review are stable
-2. scaffold all core interfaces and module boundaries
-3. mock or stub not-yet-implemented dependencies so the seams are live early
-4. add skeletal tests around those seams as guard rails
-5. deepen module implementations behind the existing interfaces
+2. add a simple CI pipeline for the chosen stack
+3. scaffold all core interfaces and module boundaries
+4. mock or stub not-yet-implemented dependencies so the seams are live early
+5. add skeletal tests around those seams as guard rails
+6. deepen module implementations behind the existing interfaces
 
 ## Work Stages
 
@@ -67,7 +69,7 @@ Within layer 2, the implementation sequence should be:
 | 0. Documentation and workflow setup | Completed | Governance docs, planning scaffold, AI diary rules, and repo workflow rules are in place. |
 | 1. Refine design boundary and execution plan | Completed | Solution scope, execution sequence, and design workflow are now explicit. |
 | 2. Define architecture and module contracts | Completed | Architecture baseline, stable first-pass module contracts, and the open-question review are complete. No remaining architecture blocker currently prevents stack selection. |
-| 3. Select stack and scaffold interfaces | In progress | Choose runtime, language, framework, and transport, then scaffold all planned interfaces, mocks, and placeholder integrations. |
+| 3. Select stack, add CI, and scaffold interfaces | In progress | Choose runtime, language, framework, and transport, add a simple CI pipeline for the chosen stack, then scaffold all planned interfaces, mocks, and placeholder integrations. |
 | 4. Add guard-rail tests and participation skeleton | Pending | Add bare-bones tests around the scaffolded seams and implement the first usable participation flow behind the existing interfaces. |
 | 5. Implement scoring and leaderboard flow | Pending | Deepen the stubbed scoring, ranking, and live update paths without breaking the established interfaces or guard-rail tests. |
 | 6. Strengthen tests, demo flow, and observability hooks | Pending | Expand tests, improve the local multi-client demo path, and add logging plus developer run instructions. |
@@ -94,6 +96,7 @@ Within layer 2, the implementation sequence should be:
 
 - project structure exists and can host the planned implementation cleanly
 - stack choices are documented with rationale
+- a simple CI pipeline exists for the chosen stack
 - all planned module interfaces and composition seams are present
 - mocks or placeholder integrations exist for unfinished dependencies
 - the local run path is minimally functional at a scaffold level
@@ -114,11 +117,12 @@ Within layer 2, the implementation sequence should be:
 
 ## Active Focus
 
-Current stage: `3. Select stack and scaffold interfaces`
+Current stage: `3. Select stack, add CI, and scaffold interfaces`
 
 Immediate next outputs:
 
 - choose the implementation stack
+- add a simple CI pipeline immediately after stack selection
 - settle the small set of remaining interface-shape items that affect scaffolding
 - scaffold interfaces, mocks, and placeholder integrations
 - prepare skeletal tests as guard rails for the first implementation slice
@@ -127,14 +131,15 @@ Immediate next outputs:
 ## Current Next Steps
 
 1. Choose the stack.
-2. Settle the remaining interface-shape items that affect scaffolding.
-3. Scaffold all planned interfaces, mocks, and placeholder integrations before deep module implementation.
-4. Add skeletal tests around those seams before fleshing out the detailed implementations.
-5. Start the first usable participation slice behind the scaffolded interfaces.
+2. Add a simple CI pipeline for the chosen stack.
+3. Settle the remaining interface-shape items that affect scaffolding.
+4. Scaffold all planned interfaces, mocks, and placeholder integrations before deep module implementation.
+5. Add skeletal tests around those seams before fleshing out the detailed implementations.
+6. Start the first usable participation slice behind the scaffolded interfaces.
 
 ## Resume Point
 
-The next session should resume with stack selection and interface scaffolding prep.
+The next session should resume with stack selection, CI setup, and interface scaffolding prep.
 
 Read in this order:
 
@@ -148,9 +153,10 @@ Read in this order:
 8. `docs/modules/scoring-and-leaderboard.md`
 9. `docs/modules/observability-and-operations.md`
 
-Resume with these module decisions first:
+Resume with these implementation decisions first:
 
 - choose the runtime, transport approach, and project structure
+- add a simple CI pipeline once the stack is chosen
 - settle the payload-shape and health-surface details that affect the scaffold
 - define the first interface set and placeholder integrations
 - define the first skeletal test set
@@ -163,6 +169,7 @@ After the first full pass through the design docs:
 
 After stack selection:
 
+- add a simple CI pipeline for the chosen stack
 - scaffold all core module interfaces before deep implementation
 - mock unfinished dependencies so integration seams exist early
 - add bare-bones tests around those seams as guard rails

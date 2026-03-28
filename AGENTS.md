@@ -23,6 +23,7 @@ This file defines how AI assistants should work in this repository. It is the pr
 - While a PR is in progress, prefer amending the existing branch commit instead of stacking many commits.
 - Keep branches short-lived and rebased or refreshed as needed to stay close to trunk.
 - Every pull request must include at least one AI usage diary entry under `docs/ai-usage/`.
+- Use a short type tag in commit subjects such as `[feat]`, `[fix]`, `[chore]`, or `[docs]`.
 - Keep commit subjects easy to read and at or under 50 characters when practical.
 - Use the commit body for additional detail when context is needed.
 
