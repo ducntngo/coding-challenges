@@ -247,7 +247,7 @@ test("transport handler joins successfully and binds the connection", async () =
       quizId: "demo-quiz",
       sessionInstanceId: "session-demo-001",
       status: "active",
-      phase: "lobby",
+      phase: "question_open",
       version: 2,
     },
     self: {
@@ -419,7 +419,7 @@ test("transport handler reconnects successfully and binds the new connection", a
     quizId: "demo-quiz",
     sessionInstanceId: "session-demo-001",
     status: "active",
-    phase: "lobby",
+    phase: "question_open",
     version: 3,
   });
   assert.deepEqual(payload.self, {
@@ -759,6 +759,62 @@ test("transport handler rejects a duplicate answer submission", async () => {
         code: "answer_rejected",
         message:
           `Participant ${ctx.participantId} already answered question question-1.`,
+      },
+    },
+  ]);
+});
+
+test("transport handler rejects answer.submit when the session phase is not question_open", async () => {
+  const deps = buildDefaultDependencies();
+  const ctx: ConnectionContext = {
+    connectionId: "connection-answer-3",
+    state: "awaiting_bind",
+  };
+
+  await deps.transportCommandHandler.handleMessage(
+    ctx,
+    JSON.stringify({
+      command: "session.join",
+      requestId: "req-join-answer-3",
+      payload: {
+        quizId: "demo-quiz",
+        displayName: "Alice",
+      },
+    }),
+  );
+
+  const existingSession = await deps.sessionStore.getActiveSession("demo-quiz");
+
+  assert.ok(existingSession);
+
+  await deps.sessionStore.saveSession({
+    ...existingSession,
+    snapshot: {
+      ...existingSession.snapshot,
+      phase: "question_closed",
+      version: existingSession.snapshot.version + 1,
+    },
+  });
+
+  const events = await deps.transportCommandHandler.handleMessage(
+    ctx,
+    JSON.stringify({
+      command: "answer.submit",
+      requestId: "req-answer-3",
+      payload: {
+        questionId: "question-1",
+        answer: "correct",
+      },
+    }),
+  );
+
+  assert.deepEqual(events, [
+    {
+      event: "command.rejected",
+      requestId: "req-answer-3",
+      payload: {
+        code: "answer_rejected",
+        message: "Answers are not being accepted in phase question_closed.",
       },
     },
   ]);

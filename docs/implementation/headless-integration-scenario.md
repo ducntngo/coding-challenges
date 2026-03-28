@@ -33,6 +33,12 @@ The scenario then validates these behaviors:
 10. Bob disconnects from `demo-quiz`, and only his participant state changes to `disconnected`.
 11. `science-quiz` remains unchanged while disconnect activity happens in `demo-quiz`.
 
+The harness also includes a smaller rejection scenario:
+
+- a participant joins `demo-quiz`
+- the session phase is moved to `question_closed`
+- a later `answer.submit` attempt is rejected without mutating session state
+
 ## What The Harness Asserts
 
 The automated harness currently checks:
@@ -49,13 +55,15 @@ The automated harness currently checks:
 - stale-disconnect safety after reconnect
 - disconnect state transition for another participant in the same session
 - cross-session isolation throughout the sequence
+- rejection when a session is not in `question_open`
 
 ## Current Limitations
 
 This scenario intentionally reflects the current implementation rather than the final target behavior.
 
 - the scoring behavior is still deterministic and stubbed rather than timing-based
-- late-answer and question-phase rejection cases are not covered yet
+- explicit current-question context does not exist yet, so late-answer and wrong-question rejection cases are not covered yet
+- the current scaffold starts sessions in `question_open` because host-driven phase progression is not implemented yet
 
 ## Expected Evolution
 

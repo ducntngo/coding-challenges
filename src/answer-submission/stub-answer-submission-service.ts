@@ -43,6 +43,13 @@ export class StubAnswerSubmissionService implements AnswerSubmissionService {
       };
     }
 
+    if (existingSession.snapshot.phase !== "question_open") {
+      return {
+        accepted: false,
+        reason: `Answers are not being accepted in phase ${existingSession.snapshot.phase}.`,
+      };
+    }
+
     const participantRecord = existingSession.participantRecords.find(
       (candidate) => candidate.participantId === input.participantId,
     );
