@@ -15,9 +15,15 @@ import {
 } from "../store/in-memory-session-store";
 import type { SessionStore } from "../store/contracts";
 import {
+  StubSessionProgressionService,
+} from "../session/stub-session-progression-service";
+import {
   StubQuizSessionService,
 } from "../session/stub-quiz-session-service";
-import type { QuizSessionService } from "../session/contracts";
+import type {
+  QuizSessionService,
+  SessionProgressionService,
+} from "../session/contracts";
 import {
   StubScoringService,
 } from "../scoring/stub-scoring-service";
@@ -27,6 +33,7 @@ export interface AppDependencies {
   readonly quizDefinitionSource: QuizDefinitionSource;
   readonly sessionStore: SessionStore;
   readonly sessionService: QuizSessionService;
+  readonly progressionService: SessionProgressionService;
   readonly scoringService: ScoringService;
   readonly answerSubmissionService: AnswerSubmissionService;
   readonly transportCommandHandler: TransportCommandHandler;
@@ -36,6 +43,10 @@ export function buildDefaultDependencies(): AppDependencies {
   const quizDefinitionSource = new MockQuizDefinitionSource();
   const sessionStore = new InMemorySessionStore();
   const sessionService = new StubQuizSessionService(
+    sessionStore,
+    quizDefinitionSource,
+  );
+  const progressionService = new StubSessionProgressionService(
     sessionStore,
     quizDefinitionSource,
   );
@@ -54,6 +65,7 @@ export function buildDefaultDependencies(): AppDependencies {
     quizDefinitionSource,
     sessionStore,
     sessionService,
+    progressionService,
     scoringService,
     answerSubmissionService,
     transportCommandHandler,

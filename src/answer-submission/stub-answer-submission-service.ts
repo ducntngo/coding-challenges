@@ -118,6 +118,7 @@ export class StubAnswerSubmissionService implements AnswerSubmissionService {
       participantRecords: nextParticipantRecords,
       quizId: input.quizId,
       sessionInstanceId: existingSession.snapshot.sessionInstanceId,
+      phase: existingSession.snapshot.phase,
       currentQuestionId: existingSession.snapshot.currentQuestionId,
     });
 

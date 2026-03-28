@@ -787,18 +787,11 @@ test("transport handler rejects answer.submit when the session phase is not ques
     }),
   );
 
-  const existingSession = await deps.sessionStore.getActiveSession("demo-quiz");
+  const closedSnapshot = await deps.progressionService.closeCurrentQuestion(
+    "demo-quiz",
+  );
 
-  assert.ok(existingSession);
-
-  await deps.sessionStore.saveSession({
-    ...existingSession,
-    snapshot: {
-      ...existingSession.snapshot,
-      phase: "question_closed",
-      version: existingSession.snapshot.version + 1,
-    },
-  });
+  assert.equal(closedSnapshot.phase, "question_closed");
 
   const events = await deps.transportCommandHandler.handleMessage(
     ctx,
@@ -843,13 +836,20 @@ test("transport handler rejects answer.submit for a non-active question", async 
     }),
   );
 
+  const advancedSnapshot = await deps.progressionService.advanceToNextQuestion(
+    "demo-quiz",
+  );
+
+  assert.equal(advancedSnapshot.phase, "question_open");
+  assert.equal(advancedSnapshot.currentQuestionId, "question-2");
+
   const events = await deps.transportCommandHandler.handleMessage(
     ctx,
     JSON.stringify({
       command: "answer.submit",
       requestId: "req-answer-4",
       payload: {
-        questionId: "question-2",
+        questionId: "question-1",
         answer: "correct",
       },
     }),
@@ -862,7 +862,7 @@ test("transport handler rejects answer.submit for a non-active question", async 
       payload: {
         code: "answer_rejected",
         message:
-          "Question question-2 is not the active question for quiz demo-quiz.",
+          "Question question-1 is not the active question for quiz demo-quiz.",
       },
     },
   ]);

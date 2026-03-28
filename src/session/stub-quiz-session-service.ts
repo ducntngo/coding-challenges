@@ -71,6 +71,7 @@ export class StubQuizSessionService implements QuizSessionService {
       sessionInstanceId:
         existingSession?.snapshot.sessionInstanceId ??
         this.sessionInstanceIdGenerator(),
+      phase: existingSession?.snapshot.phase ?? "question_open",
       currentQuestionId:
         existingSession?.snapshot.currentQuestionId ?? quiz.questionIds[0] ?? null,
     });
@@ -134,6 +135,7 @@ export class StubQuizSessionService implements QuizSessionService {
       participantRecords: nextParticipantRecords,
       quizId: input.quizId,
       sessionInstanceId: existingSession.snapshot.sessionInstanceId,
+      phase: existingSession.snapshot.phase,
       currentQuestionId: existingSession.snapshot.currentQuestionId,
     });
 
@@ -188,6 +190,7 @@ export class StubQuizSessionService implements QuizSessionService {
       participantRecords: nextParticipantRecords,
       quizId: input.quizId,
       sessionInstanceId: existingSession.snapshot.sessionInstanceId,
+      phase: existingSession.snapshot.phase,
       currentQuestionId: existingSession.snapshot.currentQuestionId,
     });
 
