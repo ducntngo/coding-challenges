@@ -58,6 +58,11 @@ export interface SessionReconnectPayload {
   readonly reconnectToken: string;
 }
 
+export interface AnswerSubmitPayload {
+  readonly questionId: string;
+  readonly answer: string;
+}
+
 export interface TransportSessionView {
   readonly session: {
     readonly quizId: string;
@@ -85,6 +90,19 @@ export interface TransportSessionView {
     readonly score: number;
     readonly rank: number;
   }[];
+}
+
+export interface ParticipantScoreUpdatedPayload {
+  readonly quizId: string;
+  readonly participantId: string;
+  readonly questionId: string;
+  readonly scoreDelta: number;
+  readonly totalScore: number;
+}
+
+export interface LeaderboardUpdatedPayload {
+  readonly quizId: string;
+  readonly leaderboard: TransportSessionView["leaderboard"];
 }
 
 export function isKnownInboundCommand(

@@ -4,7 +4,11 @@
 
 ## Status
 
-Active draft. The early automated headless integration harness now exists and should deepen as participation and scoring behavior become real.
+Active draft. The early automated headless integration harness now exists, covers accepted answer flow, and should deepen as scoring and session-wide live update behavior become real.
+
+Current scenario reference:
+
+- `docs/implementation/headless-integration-scenario.md`
 
 ## Goal
 
@@ -25,13 +29,14 @@ Finish verification, documentation, and submission-ready packaging.
 3. Drive multiple simulated players across concurrent quiz sessions through the real transport boundary.
 4. Stub or mock unfinished answer, scoring, or leaderboard behavior behind the existing interfaces until those modules are ready.
 5. Expand the same harness as answer handling and leaderboard updates become real.
-6. Keep the scenario headless and code-driven instead of building a full frontend for test coverage.
-7. Keep unit and integration suites separated so fast feedback and deeper end-to-end coverage can evolve independently.
-8. Treat the existing integration harness as the canonical place for new multi-client and cross-session scenarios instead of creating disconnected one-off flows.
-9. Add a simple local multi-client demo flow.
-10. Write the AI collaboration document with prompts, tasks, and verification steps.
-11. Tighten README instructions.
-12. Review the repository from a submission perspective.
+6. Add assertions for session-wide score and leaderboard visibility once update fanout is implemented.
+7. Keep the scenario headless and code-driven instead of building a full frontend for test coverage.
+8. Keep unit and integration suites separated so fast feedback and deeper end-to-end coverage can evolve independently.
+9. Treat the existing integration harness as the canonical place for new multi-client and cross-session scenarios instead of creating disconnected one-off flows.
+10. Add a simple local multi-client demo flow.
+11. Write the AI collaboration document with prompts, tasks, and verification steps.
+12. Tighten README instructions.
+13. Review the repository from a submission perspective.
 
 ## Exit Criteria
 

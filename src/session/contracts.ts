@@ -17,6 +17,7 @@ export interface ParticipantRecord extends ParticipantSummary {
   readonly reconnectToken: string;
   readonly connectionId?: string;
   readonly joinOrder: number;
+  readonly answeredQuestionIds: readonly string[];
 }
 
 export interface LeaderboardEntry {
