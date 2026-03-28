@@ -71,6 +71,8 @@ export class StubQuizSessionService implements QuizSessionService {
       sessionInstanceId:
         existingSession?.snapshot.sessionInstanceId ??
         this.sessionInstanceIdGenerator(),
+      currentQuestionId:
+        existingSession?.snapshot.currentQuestionId ?? quiz.questionIds[0] ?? null,
     });
 
     await this.sessionStore.saveSession(nextSession);
@@ -132,6 +134,7 @@ export class StubQuizSessionService implements QuizSessionService {
       participantRecords: nextParticipantRecords,
       quizId: input.quizId,
       sessionInstanceId: existingSession.snapshot.sessionInstanceId,
+      currentQuestionId: existingSession.snapshot.currentQuestionId,
     });
 
     await this.sessionStore.saveSession(nextSession);
@@ -185,6 +188,7 @@ export class StubQuizSessionService implements QuizSessionService {
       participantRecords: nextParticipantRecords,
       quizId: input.quizId,
       sessionInstanceId: existingSession.snapshot.sessionInstanceId,
+      currentQuestionId: existingSession.snapshot.currentQuestionId,
     });
 
     await this.sessionStore.saveSession(nextSession);

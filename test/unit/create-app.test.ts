@@ -215,6 +215,7 @@ test("transport handler joins successfully and binds the connection", async () =
   const payload = events[0]?.payload as {
     session: {
       phase: string;
+      currentQuestionId: string | null;
       quizId: string;
       sessionInstanceId: string;
       status: string;
@@ -248,6 +249,7 @@ test("transport handler joins successfully and binds the connection", async () =
       sessionInstanceId: "session-demo-001",
       status: "active",
       phase: "question_open",
+      currentQuestionId: "question-1",
       version: 2,
     },
     self: {
@@ -404,6 +406,7 @@ test("transport handler reconnects successfully and binds the new connection", a
       sessionInstanceId: string;
       status: string;
       phase: string;
+      currentQuestionId: string | null;
       version: number;
     };
     self: {
@@ -420,6 +423,7 @@ test("transport handler reconnects successfully and binds the new connection", a
     sessionInstanceId: "session-demo-001",
     status: "active",
     phase: "question_open",
+    currentQuestionId: "question-1",
     version: 3,
   });
   assert.deepEqual(payload.self, {
@@ -815,6 +819,50 @@ test("transport handler rejects answer.submit when the session phase is not ques
       payload: {
         code: "answer_rejected",
         message: "Answers are not being accepted in phase question_closed.",
+      },
+    },
+  ]);
+});
+
+test("transport handler rejects answer.submit for a non-active question", async () => {
+  const deps = buildDefaultDependencies();
+  const ctx: ConnectionContext = {
+    connectionId: "connection-answer-4",
+    state: "awaiting_bind",
+  };
+
+  await deps.transportCommandHandler.handleMessage(
+    ctx,
+    JSON.stringify({
+      command: "session.join",
+      requestId: "req-join-answer-4",
+      payload: {
+        quizId: "demo-quiz",
+        displayName: "Alice",
+      },
+    }),
+  );
+
+  const events = await deps.transportCommandHandler.handleMessage(
+    ctx,
+    JSON.stringify({
+      command: "answer.submit",
+      requestId: "req-answer-4",
+      payload: {
+        questionId: "question-2",
+        answer: "correct",
+      },
+    }),
+  );
+
+  assert.deepEqual(events, [
+    {
+      event: "command.rejected",
+      requestId: "req-answer-4",
+      payload: {
+        code: "answer_rejected",
+        message:
+          "Question question-2 is not the active question for quiz demo-quiz.",
       },
     },
   ]);

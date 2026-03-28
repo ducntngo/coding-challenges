@@ -144,6 +144,8 @@ test("headless integration harness covers multiple players across concurrent ses
 
   assert.ok(demoSnapshotAfterJoins);
   assert.ok(scienceSnapshotAfterJoins);
+  assert.equal(demoSnapshotAfterJoins.currentQuestionId, "question-1");
+  assert.equal(scienceSnapshotAfterJoins.currentQuestionId, "question-1");
   assert.deepEqual(
     demoSnapshotAfterJoins.participants
       .map((participant) => participant.displayName)
@@ -510,6 +512,66 @@ test("headless integration harness rejects answers when the session phase is clo
   });
 });
 
+test("headless integration harness rejects answers for a non-active question", async (t) => {
+  const deps = buildIntegrationDependencies();
+  const app = createApp({
+    deps,
+    logger: false,
+  });
+  const clients: IntegrationTestClient[] = [];
+
+  t.after(async () => {
+    await Promise.allSettled(clients.map(async (client) => client.close()));
+    await app.close();
+  });
+
+  const address = await app.listen({
+    port: 0,
+    host: "127.0.0.1",
+  });
+  const wsUrl = buildWebSocketUrl(address, "/ws");
+  const aliceConnection = await IntegrationTestClient.connect(wsUrl);
+
+  clients.push(aliceConnection);
+
+  const joinedEvent = await aliceConnection.sendCommand({
+    command: "session.join",
+    requestId: "req-join-wrong-question",
+    payload: {
+      quizId: "demo-quiz",
+      displayName: "Alice",
+    },
+  });
+
+  const joinedPayload = assertSessionEvent(
+    joinedEvent,
+    "session.joined",
+    "demo-quiz",
+    1,
+  );
+
+  assert.equal(joinedPayload.session.currentQuestionId, "question-1");
+
+  const rejectedEvent = await aliceConnection.sendCommand({
+    command: "answer.submit",
+    requestId: "req-answer-wrong-question",
+    payload: {
+      questionId: "question-2",
+      answer: "correct",
+    },
+  });
+
+  assert.deepEqual(rejectedEvent, {
+    event: "command.rejected",
+    requestId: "req-answer-wrong-question",
+    payload: {
+      code: "answer_rejected",
+      message:
+        "Question question-2 is not the active question for quiz demo-quiz.",
+    },
+  });
+});
+
 class StaticQuizDefinitionSource implements QuizDefinitionSource {
   private readonly quizzes: Map<string, QuizDefinition>;
 
@@ -619,12 +681,12 @@ function buildIntegrationDependencies(): AppDependencies {
     {
       quizId: "demo-quiz",
       title: "Demo Vocabulary Quiz",
-      questionIds: ["question-1"],
+      questionIds: ["question-1", "question-2"],
     },
     {
       quizId: "science-quiz",
       title: "Science Quiz",
-      questionIds: ["question-1"],
+      questionIds: ["question-1", "question-2"],
     },
   ]);
   const sessionStore = new InMemorySessionStore();
@@ -681,6 +743,7 @@ function assertSessionEvent(
   const payload = event.payload as TransportSessionView;
 
   assert.equal(payload.session.quizId, expectedQuizId);
+  assert.equal(payload.session.currentQuestionId, "question-1");
   assert.equal(payload.participants.length, expectedParticipantCount);
 
   return payload;

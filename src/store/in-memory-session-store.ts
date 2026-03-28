@@ -7,6 +7,7 @@ const demoSession: SessionAggregate = {
     sessionInstanceId: "session-demo-001",
     status: "active",
     phase: "question_open",
+    currentQuestionId: "question-1",
     version: 1,
     participants: [],
     leaderboard: [],

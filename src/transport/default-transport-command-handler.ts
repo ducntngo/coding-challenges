@@ -461,6 +461,7 @@ function buildTransportSessionView(
       sessionInstanceId: result.snapshot.sessionInstanceId,
       status: result.snapshot.status,
       phase: result.snapshot.phase,
+      currentQuestionId: result.snapshot.currentQuestionId,
       version: result.snapshot.version,
     },
     self: {

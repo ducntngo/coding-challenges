@@ -50,6 +50,20 @@ export class StubAnswerSubmissionService implements AnswerSubmissionService {
       };
     }
 
+    if (existingSession.snapshot.currentQuestionId === null) {
+      return {
+        accepted: false,
+        reason: `Quiz ${input.quizId} has no active question.`,
+      };
+    }
+
+    if (input.questionId !== existingSession.snapshot.currentQuestionId) {
+      return {
+        accepted: false,
+        reason: `Question ${input.questionId} is not the active question for quiz ${input.quizId}.`,
+      };
+    }
+
     const participantRecord = existingSession.participantRecords.find(
       (candidate) => candidate.participantId === input.participantId,
     );
@@ -104,6 +118,7 @@ export class StubAnswerSubmissionService implements AnswerSubmissionService {
       participantRecords: nextParticipantRecords,
       quizId: input.quizId,
       sessionInstanceId: existingSession.snapshot.sessionInstanceId,
+      currentQuestionId: existingSession.snapshot.currentQuestionId,
     });
 
     await this.sessionStore.saveSession(nextSession);
