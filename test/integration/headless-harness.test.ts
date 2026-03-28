@@ -4,17 +4,20 @@ import test from "node:test";
 
 import WebSocket from "ws";
 
+import { StubAnswerSubmissionService } from "../../src/answer-submission/stub-answer-submission-service";
 import { createApp } from "../../src/app/create-app";
 import type { AppDependencies } from "../../src/app/dependencies";
 import type { QuizDefinition, QuizDefinitionSource } from "../../src/quiz-source/contracts";
-import { NoopScoringService } from "../../src/scoring/noop-scoring-service";
+import { StubScoringService } from "../../src/scoring/stub-scoring-service";
 import type { SessionSnapshot } from "../../src/session/contracts";
 import { StubQuizSessionService } from "../../src/session/stub-quiz-session-service";
 import { InMemorySessionStore } from "../../src/store/in-memory-session-store";
 import { DefaultTransportCommandHandler } from "../../src/transport/default-transport-command-handler";
 import type {
   InboundCommandEnvelope,
+  LeaderboardUpdatedPayload,
   OutboundEventEnvelope,
+  ParticipantScoreUpdatedPayload,
   TransportSessionView,
 } from "../../src/transport/contracts";
 
@@ -154,6 +157,141 @@ test("headless integration harness covers multiple players across concurrent ses
     ["Carol", "Dana"],
   );
 
+  const [aliceAnswerEvents, carolAnswerEvents] = await Promise.all([
+    aliceConnection.sendCommandAndReadEvents(
+      {
+        command: "answer.submit",
+        requestId: "req-answer-alice",
+        payload: {
+          questionId: "question-1",
+          answer: "correct",
+        },
+      },
+      2,
+    ),
+    carolConnection.sendCommandAndReadEvents(
+      {
+        command: "answer.submit",
+        requestId: "req-answer-carol",
+        payload: {
+          questionId: "question-1",
+          answer: "wrong",
+        },
+      },
+      2,
+    ),
+  ]);
+
+  assert.equal(aliceAnswerEvents.length, 2);
+  assert.equal(carolAnswerEvents.length, 2);
+
+  const [aliceScoreEnvelope, aliceLeaderboardEnvelope] = aliceAnswerEvents;
+  const [carolScoreEnvelope, carolLeaderboardEnvelope] = carolAnswerEvents;
+
+  const aliceScoreEvent = assertScoreEvent(
+    aliceScoreEnvelope!,
+    "req-answer-alice",
+    aliceJoinPayload.self.participantId,
+    "demo-quiz",
+    100,
+    100,
+  );
+  const aliceLeaderboardEvent = assertLeaderboardEvent(
+    aliceLeaderboardEnvelope!,
+    "req-answer-alice",
+    "demo-quiz",
+  );
+  const carolScoreEvent = assertScoreEvent(
+    carolScoreEnvelope!,
+    "req-answer-carol",
+    carolJoinPayload.self.participantId,
+    "science-quiz",
+    0,
+    0,
+  );
+  const carolLeaderboardEvent = assertLeaderboardEvent(
+    carolLeaderboardEnvelope!,
+    "req-answer-carol",
+    "science-quiz",
+  );
+
+  assert.deepEqual(aliceLeaderboardEvent.leaderboard, [
+    {
+      participantId: aliceJoinPayload.self.participantId,
+      displayName: "Alice",
+      score: 100,
+      rank: 1,
+    },
+    {
+      participantId: bobJoinPayload.self.participantId,
+      displayName: "Bob",
+      score: 0,
+      rank: 2,
+    },
+  ]);
+  assert.deepEqual(carolLeaderboardEvent.leaderboard, [
+    {
+      participantId: carolJoinPayload.self.participantId,
+      displayName: "Carol",
+      score: 0,
+      rank: 1,
+    },
+    {
+      participantId: danaJoinPayload.self.participantId,
+      displayName: "Dana",
+      score: 0,
+      rank: 2,
+    },
+  ]);
+
+  assert.equal(aliceScoreEvent.questionId, "question-1");
+  assert.equal(carolScoreEvent.questionId, "question-1");
+
+  const demoSnapshotAfterAnswer = await waitForSessionSnapshot(
+    deps,
+    "demo-quiz",
+    (snapshot) =>
+      snapshot.participants.some(
+        (participant) =>
+          participant.participantId === aliceJoinPayload.self.participantId &&
+          participant.score === 100,
+      ),
+  );
+  const scienceSnapshotAfterAnswer = await waitForSessionSnapshot(
+    deps,
+    "science-quiz",
+    (snapshot) => snapshot.version === 3,
+  );
+
+  assert.deepEqual(demoSnapshotAfterAnswer.leaderboard, [
+    {
+      participantId: aliceJoinPayload.self.participantId,
+      displayName: "Alice",
+      score: 100,
+      rank: 1,
+    },
+    {
+      participantId: bobJoinPayload.self.participantId,
+      displayName: "Bob",
+      score: 0,
+      rank: 2,
+    },
+  ]);
+  assert.deepEqual(scienceSnapshotAfterAnswer.leaderboard, [
+    {
+      participantId: carolJoinPayload.self.participantId,
+      displayName: "Carol",
+      score: 0,
+      rank: 1,
+    },
+    {
+      participantId: danaJoinPayload.self.participantId,
+      displayName: "Dana",
+      score: 0,
+      rank: 2,
+    },
+  ]);
+
   const aliceReplacement = await IntegrationTestClient.connect(wsUrl);
   clients.push(aliceReplacement);
 
@@ -185,7 +323,7 @@ test("headless integration harness covers multiple players across concurrent ses
     await deps.sessionService.getSessionSnapshot("demo-quiz");
 
   assert.ok(demoSnapshotAfterStaleDisconnect);
-  assert.equal(demoSnapshotAfterStaleDisconnect.version, 4);
+  assert.equal(demoSnapshotAfterStaleDisconnect.version, 5);
   assert.deepEqual(
     demoSnapshotAfterStaleDisconnect.participants
       .map((participant) => ({
@@ -211,7 +349,7 @@ test("headless integration harness covers multiple players across concurrent ses
     deps,
     "demo-quiz",
     (snapshot) =>
-      snapshot.version === 5 &&
+      snapshot.version === 6 &&
       snapshot.participants.some(
         (participant) =>
           participant.displayName === "Bob" &&
@@ -242,7 +380,7 @@ test("headless integration harness covers multiple players across concurrent ses
     await deps.sessionService.getSessionSnapshot("science-quiz");
 
   assert.ok(scienceSnapshotAfterDemoDisconnects);
-  assert.equal(scienceSnapshotAfterDemoDisconnects.version, 2);
+  assert.equal(scienceSnapshotAfterDemoDisconnects.version, 3);
   assert.deepEqual(
     scienceSnapshotAfterDemoDisconnects.participants
       .map((participant) => ({
@@ -321,6 +459,21 @@ class IntegrationTestClient {
     return this.readEvent();
   }
 
+  async sendCommandAndReadEvents(
+    envelope: InboundCommandEnvelope,
+    expectedEventCount: number,
+  ): Promise<OutboundEventEnvelope[]> {
+    this.socket.send(JSON.stringify(envelope));
+
+    const events: OutboundEventEnvelope[] = [];
+
+    for (let index = 0; index < expectedEventCount; index += 1) {
+      events.push(await this.readEvent());
+    }
+
+    return events;
+  }
+
   async close(): Promise<void> {
     if (this.socket.readyState === WebSocket.CLOSED) {
       return;
@@ -392,10 +545,15 @@ function buildIntegrationDependencies(): AppDependencies {
       },
     },
   );
-  const scoringService = new NoopScoringService();
+  const scoringService = new StubScoringService();
+  const answerSubmissionService = new StubAnswerSubmissionService(
+    sessionStore,
+    quizDefinitionSource,
+    scoringService,
+  );
   const transportCommandHandler = new DefaultTransportCommandHandler({
     sessionService,
-    scoringService,
+    answerSubmissionService,
   });
 
   return {
@@ -403,6 +561,7 @@ function buildIntegrationDependencies(): AppDependencies {
     sessionStore,
     sessionService,
     scoringService,
+    answerSubmissionService,
     transportCommandHandler,
   };
 }
@@ -419,6 +578,45 @@ function assertSessionEvent(
 
   assert.equal(payload.session.quizId, expectedQuizId);
   assert.equal(payload.participants.length, expectedParticipantCount);
+
+  return payload;
+}
+
+function assertScoreEvent(
+  event: OutboundEventEnvelope,
+  expectedRequestId: string,
+  expectedParticipantId: string,
+  expectedQuizId: string,
+  expectedScoreDelta: number,
+  expectedTotalScore: number,
+): ParticipantScoreUpdatedPayload {
+  assert.equal(event.event, "participant.score.updated");
+  assert.equal(event.requestId, expectedRequestId);
+
+  const payload = event.payload as ParticipantScoreUpdatedPayload;
+
+  assert.deepEqual(payload, {
+    quizId: expectedQuizId,
+    participantId: expectedParticipantId,
+    questionId: "question-1",
+    scoreDelta: expectedScoreDelta,
+    totalScore: expectedTotalScore,
+  });
+
+  return payload;
+}
+
+function assertLeaderboardEvent(
+  event: OutboundEventEnvelope,
+  expectedRequestId: string,
+  expectedQuizId: string,
+): LeaderboardUpdatedPayload {
+  assert.equal(event.event, "leaderboard.updated");
+  assert.equal(event.requestId, expectedRequestId);
+
+  const payload = event.payload as LeaderboardUpdatedPayload;
+
+  assert.equal(payload.quizId, expectedQuizId);
 
   return payload;
 }

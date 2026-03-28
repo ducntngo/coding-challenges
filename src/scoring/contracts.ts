@@ -3,6 +3,7 @@ export interface AnswerSubmission {
   readonly quizId: string;
   readonly questionId: string;
   readonly answer: string;
+  readonly currentScore: number;
 }
 
 export interface ScoringResult {

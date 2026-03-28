@@ -1,13 +1,16 @@
+import type { AnswerSubmissionService } from "../answer-submission/contracts";
 import type { QuizSessionService } from "../session/contracts";
 import { SessionJoinRejectedError } from "../session/contracts";
 import { SessionReconnectRejectedError } from "../session/contracts";
-import type { ScoringService } from "../scoring/contracts";
 import type { ConnectionContext } from "./connection-context";
 import {
+  type AnswerSubmitPayload,
   isKnownInboundCommand,
   type CommandRejectedPayload,
   type InboundCommandEnvelope,
+  type LeaderboardUpdatedPayload,
   type OutboundEventEnvelope,
+  type ParticipantScoreUpdatedPayload,
   type SessionJoinPayload,
   type SessionReconnectPayload,
   type TransportSessionView,
@@ -17,7 +20,7 @@ import type { TransportCommandHandler } from "./transport-command-handler";
 
 export interface TransportHandlerDependencies {
   readonly sessionService: QuizSessionService;
-  readonly scoringService: ScoringService;
+  readonly answerSubmissionService: AnswerSubmissionService;
 }
 
 export class DefaultTransportCommandHandler implements TransportCommandHandler {
@@ -155,6 +158,65 @@ export class DefaultTransportCommandHandler implements TransportCommandHandler {
       }
     }
 
+    if (envelope.command === "answer.submit") {
+      const payload = validateAnswerSubmitPayload(envelope.payload);
+
+      if (!payload.ok) {
+        return [
+          buildRejectedEvent(envelope.requestId, "invalid_payload", payload.message),
+        ];
+      }
+
+      if (ctx.quizId === undefined || ctx.participantId === undefined) {
+        return [
+          buildRejectedEvent(
+            envelope.requestId,
+            "not_bound",
+            "answer.submit requires a bound participant connection.",
+          ),
+        ];
+      }
+
+      const result = await this.deps.answerSubmissionService.submitAnswer({
+        participantId: ctx.participantId,
+        quizId: ctx.quizId,
+        questionId: payload.value.questionId,
+        answer: payload.value.answer,
+      });
+
+      if (!result.accepted) {
+        return [
+          buildRejectedEvent(
+            envelope.requestId,
+            "answer_rejected",
+            result.reason,
+          ),
+        ];
+      }
+
+      return [
+        {
+          event: "participant.score.updated",
+          ...(envelope.requestId ? { requestId: envelope.requestId } : {}),
+          payload: {
+            quizId: result.quizId,
+            participantId: result.participantId,
+            questionId: result.questionId,
+            scoreDelta: result.scoreDelta,
+            totalScore: result.totalScore,
+          } satisfies ParticipantScoreUpdatedPayload,
+        },
+        {
+          event: "leaderboard.updated",
+          ...(envelope.requestId ? { requestId: envelope.requestId } : {}),
+          payload: {
+            quizId: result.quizId,
+            leaderboard: result.leaderboard,
+          } satisfies LeaderboardUpdatedPayload,
+        },
+      ];
+    }
+
     return [
       buildRejectedEvent(
         envelope.requestId,
@@ -185,6 +247,53 @@ export class DefaultTransportCommandHandler implements TransportCommandHandler {
       delete _ctx.participantId;
     }
   }
+}
+
+function validateAnswerSubmitPayload(
+  payload: unknown,
+):
+  | { ok: true; value: AnswerSubmitPayload }
+  | { ok: false; message: string } {
+  if (!payload || typeof payload !== "object") {
+    return {
+      ok: false,
+      message: "answer.submit payload must be a JSON object.",
+    };
+  }
+
+  const candidate = payload as Record<string, unknown>;
+
+  if (
+    typeof candidate.questionId !== "string" ||
+    candidate.questionId.trim() === ""
+  ) {
+    return {
+      ok: false,
+      message: "answer.submit payload must include a non-empty questionId.",
+    };
+  }
+
+  if (typeof candidate.answer !== "string" || candidate.answer.trim() === "") {
+    return {
+      ok: false,
+      message: "answer.submit payload must include a non-empty answer.",
+    };
+  }
+
+  if (candidate.answer.trim().length > 200) {
+    return {
+      ok: false,
+      message: "answer must be 200 characters or fewer.",
+    };
+  }
+
+  return {
+    ok: true,
+    value: {
+      questionId: candidate.questionId.trim(),
+      answer: candidate.answer.trim(),
+    },
+  };
 }
 
 function parseInboundEnvelope(

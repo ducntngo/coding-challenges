@@ -1,4 +1,8 @@
 import {
+  StubAnswerSubmissionService,
+} from "../answer-submission/stub-answer-submission-service";
+import type { AnswerSubmissionService } from "../answer-submission/contracts";
+import {
   DefaultTransportCommandHandler,
 } from "../transport/default-transport-command-handler";
 import type { TransportCommandHandler } from "../transport/transport-command-handler";
@@ -15,8 +19,8 @@ import {
 } from "../session/stub-quiz-session-service";
 import type { QuizSessionService } from "../session/contracts";
 import {
-  NoopScoringService,
-} from "../scoring/noop-scoring-service";
+  StubScoringService,
+} from "../scoring/stub-scoring-service";
 import type { ScoringService } from "../scoring/contracts";
 
 export interface AppDependencies {
@@ -24,6 +28,7 @@ export interface AppDependencies {
   readonly sessionStore: SessionStore;
   readonly sessionService: QuizSessionService;
   readonly scoringService: ScoringService;
+  readonly answerSubmissionService: AnswerSubmissionService;
   readonly transportCommandHandler: TransportCommandHandler;
 }
 
@@ -34,10 +39,15 @@ export function buildDefaultDependencies(): AppDependencies {
     sessionStore,
     quizDefinitionSource,
   );
-  const scoringService = new NoopScoringService();
+  const scoringService = new StubScoringService();
+  const answerSubmissionService = new StubAnswerSubmissionService(
+    sessionStore,
+    quizDefinitionSource,
+    scoringService,
+  );
   const transportCommandHandler = new DefaultTransportCommandHandler({
     sessionService,
-    scoringService,
+    answerSubmissionService,
   });
 
   return {
@@ -45,6 +55,7 @@ export function buildDefaultDependencies(): AppDependencies {
     sessionStore,
     sessionService,
     scoringService,
+    answerSubmissionService,
     transportCommandHandler,
   };
 }

@@ -8,7 +8,7 @@ This file is active and should be kept current through implementation and verifi
 
 ## Current Snapshot
 
-Repository state is now in early implementation. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The first real participation slices are now in place for `session.join`, `session.reconnect`, and disconnect forwarding, and the project now also has an early headless WebSocket integration harness. The next step is answer acceptance and expanding that harness behind the same interfaces.
+Repository state is now in early implementation. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The first real participation slices are now in place for `session.join`, `session.reconnect`, disconnect forwarding, and a first accepted `answer.submit` path, and the project now also has an early headless WebSocket integration harness that covers concurrent sessions plus accepted answer flow. The next step is to deepen scoring behavior and move answer-result visibility from submitter-only responses toward session-wide live updates.
 
 ## Completed
 
@@ -59,18 +59,24 @@ Repository state is now in early implementation. The design baseline is stable, 
 - Added an early headless WebSocket integration harness covering multiple players across concurrent quiz sessions
 - Split the automated tests into separate unit and integration suites with dedicated commands
 - Verified the split test commands locally with `npm run test:unit`, `npm run test:integration`, and `npm test`
+- Added an `AnswerSubmissionService` seam and a first accepted `answer.submit` path behind the existing transport, scoring, and store interfaces
+- Added a deterministic stub scoring implementation so accepted answers can mutate participant score and leaderboard state without locking in the final scoring formula
+- Mapped accepted answer results into `participant.score.updated` and `leaderboard.updated` transport events
+- Added unit coverage for accepted answer submission and duplicate-answer rejection
+- Expanded the headless integration harness to cover accepted answer flow and leaderboard state across concurrent sessions
+- Verified the answer-submission slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`
 
 ## In Progress
 
-- Moving from the working join, reconnect, disconnect, and early harness slices into answer acceptance
-- Keeping answer acceptance and scoring behavior behind the established interfaces while the implementations deepen, while expanding the existing harness instead of replacing it
+- Moving from the first accepted answer path into deeper scoring and leaderboard behavior
+- Keeping scoring behavior and answer-result mapping behind the established interfaces while the implementations deepen, while expanding the existing harness instead of replacing it
 
 ## Next Recommended Steps
 
-1. Start the first accepted `answer.submit` path behind the existing transport and scoring seams.
-2. Keep unfinished scoring behavior stubbed in the current integration harness until the deeper implementations land.
-3. Add scoring-result mapping tests before deepening leaderboard behavior.
-4. Expand the integration harness as answer handling and leaderboard updates become real.
+1. Deepen scoring behavior behind the current `ScoringService` seam.
+2. Add session-wide fanout for accepted score and leaderboard updates instead of replying only to the submitting connection.
+3. Expand the integration harness to assert score and leaderboard visibility from other participants in the same session.
+4. Add more answer rejection coverage as question-phase behavior becomes real.
 5. Keep the unit and integration suites separate as coverage grows.
 6. Keep `docs/ai-usage/` updated as work lands in commits.
 
@@ -149,6 +155,8 @@ Intentional deferrals:
 - transport-side disconnect handling now clears local binding context after forwarding the disconnect to the session boundary
 - the automated tests are now split into dedicated unit and integration suites, with `npm test` acting as the aggregate runner
 - an early headless WebSocket integration harness now covers join, reconnect, disconnect, and session isolation across multiple quiz sessions
+- the first accepted `answer.submit` path now mutates score and leaderboard state behind a dedicated `AnswerSubmissionService`
+- accepted answer results are currently exposed through `participant.score.updated` and `leaderboard.updated` transport events without embedding transport details in scoring logic
 
 ## Current Guidance
 
@@ -156,14 +164,14 @@ Use the completed module contracts plus the stage-3 scaffold as the baseline. St
 
 ## Known Gaps
 
-- answer acceptance is still stubbed
-- the integration harness does not yet cover accepted answer flow, scoring, or leaderboard updates
-- No scoring or leaderboard mutation path exists yet
+- the current scoring behavior is intentionally stubbed and does not yet implement the final timing-based formula
+- accepted score and leaderboard events currently return only to the submitting connection rather than fan out session-wide
+- late-answer rejection and question-phase-aware validation are not implemented yet
 - No richer observability hooks exist beyond the minimal health surface and app logging
 
 ## Current Module Focus
 
-- Active focus: `stage 4 participation flow implementation`
+- Active focus: `stage 5 scoring and leaderboard implementation`
 
 ## Handoff Notes
 
@@ -182,9 +190,9 @@ Any new session should start by reading:
 
 Tomorrow's intended entry point:
 
-- active focus: `stage 4 participation flow implementation`
-- first unresolved topic: implement the first accepted `answer.submit` path
-- next unresolved topics: scoring integration, leaderboard updates, and expanding the integration harness
+- active focus: `stage 5 scoring and leaderboard implementation`
+- first unresolved topic: fan out accepted score and leaderboard updates to the rest of the session
+- next unresolved topics: deepen scoring behavior, add more answer rejection cases, and keep expanding the integration harness
 
 ## Verification History
 
@@ -206,3 +214,4 @@ Tomorrow's intended entry point:
 - Verified the reconnect slice locally with `npm run typecheck`, `npm test`, and `npm run build`
 - Verified the disconnected slice locally with `npm run typecheck`, `npm test`, and `npm run build`
 - Verified the split unit and integration suites locally with `npm run test:unit`, `npm run test:integration`, and `npm test`
+- Verified the answer-submission slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`

@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { StubAnswerSubmissionService } from "../../src/answer-submission/stub-answer-submission-service";
 import { buildDefaultDependencies } from "../../src/app/dependencies";
 import { createApp } from "../../src/app/create-app";
 import { MockQuizDefinitionSource } from "../../src/quiz-source/mock-quiz-definition-source";
-import { NoopScoringService } from "../../src/scoring/noop-scoring-service";
+import { StubScoringService } from "../../src/scoring/stub-scoring-service";
 import { StubQuizSessionService } from "../../src/session/stub-quiz-session-service";
 import { InMemorySessionStore } from "../../src/store/in-memory-session-store";
 import { DefaultTransportCommandHandler } from "../../src/transport/default-transport-command-handler";
@@ -61,6 +62,80 @@ test("transport handler rejects answer.submit before binding", async () => {
         code: "not_bound",
         message: "answer.submit requires a bound participant connection.",
       },
+    },
+  ]);
+});
+
+test("transport handler accepts answer.submit for a bound connection", async () => {
+  const deps = buildDefaultDependencies();
+  const ctx: ConnectionContext = {
+    connectionId: "connection-answer-1",
+    state: "awaiting_bind",
+  };
+
+  await deps.transportCommandHandler.handleMessage(
+    ctx,
+    JSON.stringify({
+      command: "session.join",
+      requestId: "req-join-answer-1",
+      payload: {
+        quizId: "demo-quiz",
+        displayName: "Alice",
+      },
+    }),
+  );
+
+  const events = await deps.transportCommandHandler.handleMessage(
+    ctx,
+    JSON.stringify({
+      command: "answer.submit",
+      requestId: "req-answer-1",
+      payload: {
+        questionId: "question-1",
+        answer: "correct",
+      },
+    }),
+  );
+
+  assert.deepEqual(events, [
+    {
+      event: "participant.score.updated",
+      requestId: "req-answer-1",
+      payload: {
+        quizId: "demo-quiz",
+        participantId: ctx.participantId,
+        questionId: "question-1",
+        scoreDelta: 100,
+        totalScore: 100,
+      },
+    },
+    {
+      event: "leaderboard.updated",
+      requestId: "req-answer-1",
+      payload: {
+        quizId: "demo-quiz",
+        leaderboard: [
+          {
+            participantId: ctx.participantId,
+            displayName: "Alice",
+            score: 100,
+            rank: 1,
+          },
+        ],
+      },
+    },
+  ]);
+
+  const snapshot = await deps.sessionService.getSessionSnapshot("demo-quiz");
+
+  assert.ok(snapshot);
+  assert.equal(snapshot.version, 3);
+  assert.deepEqual(snapshot.leaderboard, [
+    {
+      participantId: ctx.participantId!,
+      displayName: "Alice",
+      score: 100,
+      rank: 1,
     },
   ]);
 });
@@ -272,19 +347,26 @@ test("session service reconnect rebinds the existing participant", async () => {
 });
 
 test("transport handler reconnects successfully and binds the new connection", async () => {
+  const sessionStore = new InMemorySessionStore();
+  const quizDefinitionSource = new MockQuizDefinitionSource();
   const sessionService = new StubQuizSessionService(
-    new InMemorySessionStore(),
-    new MockQuizDefinitionSource(),
+    sessionStore,
+    quizDefinitionSource,
     {
       participantIdGenerator: () => "participant-1",
       reconnectTokenGenerator: () => "token-1",
       sessionInstanceIdGenerator: () => "session-created-1",
     },
   );
-  const scoringService = new NoopScoringService();
+  const scoringService = new StubScoringService();
+  const answerSubmissionService = new StubAnswerSubmissionService(
+    sessionStore,
+    quizDefinitionSource,
+    scoringService,
+  );
   const transportCommandHandler = new DefaultTransportCommandHandler({
     sessionService,
-    scoringService,
+    answerSubmissionService,
   });
 
   const joined = await sessionService.joinSession({
@@ -427,6 +509,7 @@ test("session service disconnect marks the active participant as disconnected", 
       score: 0,
       reconnectToken: "token-1",
       joinOrder: 1,
+      answeredQuestionIds: [],
     },
   ]);
 });
@@ -482,24 +565,31 @@ test("session service ignores a stale disconnect after reconnect", async () => {
       reconnectToken: "token-1",
       connectionId: "connection-2",
       joinOrder: 1,
+      answeredQuestionIds: [],
     },
   ]);
 });
 
 test("transport handler forwards disconnect for a bound connection", async () => {
   const sessionStore = new InMemorySessionStore();
+  const quizDefinitionSource = new MockQuizDefinitionSource();
   const sessionService = new StubQuizSessionService(
     sessionStore,
-    new MockQuizDefinitionSource(),
+    quizDefinitionSource,
     {
       participantIdGenerator: () => "participant-1",
       reconnectTokenGenerator: () => "token-1",
       sessionInstanceIdGenerator: () => "session-created-1",
     },
   );
+  const scoringService = new StubScoringService();
   const transportCommandHandler = new DefaultTransportCommandHandler({
     sessionService,
-    scoringService: new NoopScoringService(),
+    answerSubmissionService: new StubAnswerSubmissionService(
+      sessionStore,
+      quizDefinitionSource,
+      scoringService,
+    ),
   });
   const ctx: ConnectionContext = {
     connectionId: "connection-1",
@@ -538,18 +628,24 @@ test("transport handler forwards disconnect for a bound connection", async () =>
 
 test("transport handler ignores a stale disconnect from a replaced connection", async () => {
   const sessionStore = new InMemorySessionStore();
+  const quizDefinitionSource = new MockQuizDefinitionSource();
   const sessionService = new StubQuizSessionService(
     sessionStore,
-    new MockQuizDefinitionSource(),
+    quizDefinitionSource,
     {
       participantIdGenerator: () => "participant-1",
       reconnectTokenGenerator: () => "token-1",
       sessionInstanceIdGenerator: () => "session-created-1",
     },
   );
+  const scoringService = new StubScoringService();
   const transportCommandHandler = new DefaultTransportCommandHandler({
     sessionService,
-    scoringService: new NoopScoringService(),
+    answerSubmissionService: new StubAnswerSubmissionService(
+      sessionStore,
+      quizDefinitionSource,
+      scoringService,
+    ),
   });
   const originalCtx: ConnectionContext = {
     connectionId: "connection-1",
@@ -608,6 +704,62 @@ test("transport handler ignores a stale disconnect from a replaced connection", 
       displayName: "Alice",
       state: "active",
       score: 0,
+    },
+  ]);
+});
+
+test("transport handler rejects a duplicate answer submission", async () => {
+  const deps = buildDefaultDependencies();
+  const ctx: ConnectionContext = {
+    connectionId: "connection-answer-2",
+    state: "awaiting_bind",
+  };
+
+  await deps.transportCommandHandler.handleMessage(
+    ctx,
+    JSON.stringify({
+      command: "session.join",
+      requestId: "req-join-answer-2",
+      payload: {
+        quizId: "demo-quiz",
+        displayName: "Alice",
+      },
+    }),
+  );
+
+  await deps.transportCommandHandler.handleMessage(
+    ctx,
+    JSON.stringify({
+      command: "answer.submit",
+      requestId: "req-answer-2a",
+      payload: {
+        questionId: "question-1",
+        answer: "correct",
+      },
+    }),
+  );
+
+  const events = await deps.transportCommandHandler.handleMessage(
+    ctx,
+    JSON.stringify({
+      command: "answer.submit",
+      requestId: "req-answer-2b",
+      payload: {
+        questionId: "question-1",
+        answer: "correct",
+      },
+    }),
+  );
+
+  assert.deepEqual(events, [
+    {
+      event: "command.rejected",
+      requestId: "req-answer-2b",
+      payload: {
+        code: "answer_rejected",
+        message:
+          `Participant ${ctx.participantId} already answered question question-1.`,
+      },
     },
   ]);
 });
