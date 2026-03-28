@@ -8,7 +8,7 @@ This file is active and should be kept current through implementation and verifi
 
 ## Current Snapshot
 
-Repository state is now in early implementation. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The first real participation slices are now in place for `session.join`, `session.reconnect`, disconnect forwarding, accepted `answer.submit`, internal question progression, and transport-visible `session.snapshot` fanout when progression changes session state. The current scoring seam now resolves correctness from quiz-definition answer data and applies a simple server-observed linear timing formula backed by question-open timestamps in session state. The headless WebSocket integration harness now covers concurrent sessions, session-wide score or leaderboard fanout, duplicate-answer rejection without passive fanout, closed-phase answer rejection with progression snapshots, and wrong-question rejection using explicit current-question context in the session snapshot. The next step is to extend late-answer coverage while keeping the current scoring baseline and harness green.
+Repository state is now at the end of stage 5 and into stage 6 hardening. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The real participation flow is in place for `session.join`, `session.reconnect`, disconnect forwarding, accepted `answer.submit`, internal question progression, and transport-visible `session.snapshot` fanout when progression changes session state. The current scoring seam resolves correctness from quiz-definition answer data and applies a simple server-observed linear timing formula backed by question-open timestamps in session state. The headless WebSocket integration harness now covers concurrent sessions, session-wide score or leaderboard fanout, duplicate-answer rejection without passive fanout, closed-phase answer rejection with progression snapshots, wrong-question rejection using explicit current-question context, and late-answer rejection after progression without passive fanout. The next step is to deepen stage-6 hardening with slower-answer coverage, demo flow, and observability hooks.
 
 ## Completed
 
@@ -100,17 +100,20 @@ Repository state is now in early implementation. The design baseline is stable, 
 - Replaced the fixed-score stub with a simple linear timing policy: short full-score grace window, then linear decay to a positive floor for correct answers
 - Added unit coverage for question-open timing persistence, seeded-session refresh, linear score decay, and the late-answer score floor
 - Verified the linear-scoring-timing slice locally with `npm test` and `npm run build`
+- Expanded the headless integration harness so a stale answer for the previous question is rejected after progression to the next question
+- Added harness assertions that progressed late-answer rejections stay connection-local and do not prevent a later accepted answer for the new active question
+- Verified the late-answer-harness slice locally with `npm run test:integration`
 
 ## In Progress
 
-- Closing the remaining stage-5 gap around richer late-answer coverage on top of the current duplicate, closed-phase, and wrong-question rejection paths
+- Moving into stage-6 hardening around deterministic slower-answer coverage, reviewer demo flow, and lightweight observability
 - Keeping scoring behavior and answer-result mapping behind the established interfaces while the existing harness grows instead of being replaced
 
 ## Next Recommended Steps
 
-1. Expand late-answer coverage further on top of the current duplicate, closed-phase, and wrong-question rejection scenarios.
-2. Keep the simple linear scoring baseline stable while the late-answer harness coverage deepens.
-3. Keep the `session.snapshot`, session-wide score fanout, duplicate rejection, phase rejection, and wrong-question rejection paths covered as late-answer behavior grows.
+1. Add a deterministic slower-answer scoring case to the current headless harness now that the linear score baseline exists.
+2. Improve the local multi-client demo path and reviewer-facing run instructions.
+3. Add lightweight observability hooks around joins, progression, accepted answers, and rejections.
 4. Keep the unit and integration suites separate as coverage grows.
 5. Keep `docs/ai-usage/` updated as work lands in commits.
 
@@ -138,7 +141,7 @@ Resolve during stage 3 or early implementation:
 
 Intentional deferrals:
 
-- exact positive scoring formula
+- exact tuning of the current linear scoring constants
 - reconnect retention TTL and cleanup thresholds
 - closed-session tombstone versus immediate deletion
 - separate score-update event versus leaderboard-only update flow
@@ -161,7 +164,7 @@ Intentional deferrals:
 - Reject subsequent answers server-side and prevent them in the client or demo UI
 - Incorrect answers score zero regardless of speed
 - Correct answers score positively, and faster correct answers score higher
-- Speed is measured from server broadcast time to server receive time only
+- Speed is measured from the server-observed question-open timestamp to server receive time only
 - Leaderboard ranking must be implemented via a replaceable ranking policy
 - Default fallback tie-break is earlier participant creation order
 - Session cleanup requires no active connections and no reconnect-eligible participants, or explicit closure
@@ -210,12 +213,12 @@ Use the completed module contracts plus the stage-3 scaffold as the baseline. St
 
 - the current scoring behavior now uses an intentionally simple linear timing model, but the constants are still lightweight challenge defaults rather than a deeply tuned formula
 - progression is visible through transport snapshots, but there is still no host-facing progression command in the current scaffold
-- richer late-answer scenarios are not yet covered beyond the current closed-phase and wrong-question progression paths
+- the headless harness still exercises only the fast-path full-score branch through the real transport boundary; slower score decay remains unit-covered only
 - No richer observability hooks exist beyond the minimal health surface and app logging
 
 ## Current Module Focus
 
-- Active focus: `stage 5 scoring and leaderboard implementation`
+- Active focus: `stage 6 test, demo, and observability hardening`
 
 ## Handoff Notes
 
@@ -234,9 +237,9 @@ Any new session should start by reading:
 
 Tomorrow's intended entry point:
 
-- active focus: `stage 5 scoring and leaderboard implementation`
-- first unresolved topic: add richer late-answer scenarios on top of the current progression snapshot path
-- next unresolved topics: preserve the current linear scoring baseline and keep the `session.snapshot` fanout path covered while stage 5 closes
+- active focus: `stage 6 test, demo, and observability hardening`
+- first unresolved topic: add a deterministic slower-answer scoring case through the current headless integration harness
+- next unresolved topics: improve the demo flow and add lightweight observability while preserving the current linear scoring baseline
 
 ## Verification History
 
@@ -266,4 +269,5 @@ Tomorrow's intended entry point:
 - Verified the progression-snapshot-fanout slice locally with `npm run typecheck`, `npm test`, and `npm run build`
 - Verified the rejection-harness-coverage slice locally with `npm run test:integration`
 - Verified the linear-scoring-timing slice locally with `npm test` and `npm run build`
+- Verified the late-answer-harness slice locally with `npm run test:integration`
 - Verified the scoring-answer-data slice locally with `npm test` and `npm run build`
