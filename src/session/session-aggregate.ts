@@ -16,7 +16,7 @@ export function buildSessionAggregate({
       quizId,
       sessionInstanceId,
       status: "active",
-      phase: existingSession?.snapshot.phase ?? "lobby",
+      phase: existingSession?.snapshot.phase ?? "question_open",
       version: (existingSession?.snapshot.version ?? 0) + 1,
       participants: participantRecords.map((participantRecord) => ({
         participantId: participantRecord.participantId,

@@ -8,7 +8,7 @@ This file is active and should be kept current through implementation and verifi
 
 ## Current Snapshot
 
-Repository state is now in early implementation. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The first real participation slices are now in place for `session.join`, `session.reconnect`, disconnect forwarding, and accepted `answer.submit`, and the headless WebSocket integration harness now covers concurrent sessions plus session-wide score and leaderboard fanout. The next step is to deepen scoring behavior and add question-phase-aware answer validation while keeping the same harness green.
+Repository state is now in early implementation. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The first real participation slices are now in place for `session.join`, `session.reconnect`, disconnect forwarding, and accepted `answer.submit`, and the headless WebSocket integration harness now covers concurrent sessions, session-wide score or leaderboard fanout, and closed-phase answer rejection. The next step is to deepen scoring behavior and add explicit current-question context plus richer answer validation while keeping the same harness green.
 
 ## Completed
 
@@ -70,18 +70,22 @@ Repository state is now in early implementation. The design baseline is stable, 
 - Added unit coverage for current-connection replacement and quiz-scoped connection lookup in the registry
 - Expanded the headless integration harness to assert passive recipients see score and leaderboard updates for their own session only
 - Verified the fanout slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`
+- Updated the current scaffold so seeded and newly created sessions start in `question_open` while host-driven phase progression does not exist yet
+- Added phase-aware answer rejection so submissions are rejected when the session phase is not `question_open`
+- Added unit coverage and headless integration coverage for closed-phase answer rejection
+- Verified the phase-aware rejection slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`
 
 ## In Progress
 
-- Moving from working session-wide score or leaderboard fanout into deeper scoring and answer-validation behavior
+- Moving from working session-wide score or leaderboard fanout into deeper scoring and current-question-aware answer-validation behavior
 - Keeping scoring behavior and answer-result mapping behind the established interfaces while the implementations deepen, while expanding the existing harness instead of replacing it
 
 ## Next Recommended Steps
 
 1. Deepen scoring behavior behind the current `ScoringService` seam.
-2. Add question-phase-aware answer validation and rejection behavior.
+2. Add explicit current-question context to the session state and transport-visible snapshot.
 3. Expand the integration harness with duplicate, late, and wrong-question scenarios.
-4. Keep the session-wide fanout path covered as scoring behavior changes.
+4. Keep the session-wide fanout and closed-phase rejection paths covered as scoring behavior changes.
 5. Keep the unit and integration suites separate as coverage grows.
 6. Keep `docs/ai-usage/` updated as work lands in commits.
 
@@ -164,6 +168,8 @@ Intentional deferrals:
 - accepted answer results are currently exposed through `participant.score.updated` and `leaderboard.updated` transport events without embedding transport details in scoring logic
 - session-wide score and leaderboard updates now fan out to the active connections in the same quiz session
 - passive fanout copies omit `requestId`, while the submitting connection still receives the direct command correlation id
+- the current scaffold starts active sessions in `question_open` until a separate host or progression flow exists
+- answer submissions now reject whenever the session phase is not `question_open`
 
 ## Current Guidance
 
@@ -172,7 +178,7 @@ Use the completed module contracts plus the stage-3 scaffold as the baseline. St
 ## Known Gaps
 
 - the current scoring behavior is intentionally stubbed and does not yet implement the final timing-based formula
-- late-answer rejection and question-phase-aware validation are not implemented yet
+- explicit current-question context is not represented yet, so late and wrong-question rejection are still limited
 - No richer observability hooks exist beyond the minimal health surface and app logging
 
 ## Current Module Focus
@@ -197,7 +203,7 @@ Any new session should start by reading:
 Tomorrow's intended entry point:
 
 - active focus: `stage 5 scoring and leaderboard implementation`
-- first unresolved topic: add question-phase-aware answer validation and rejection
+- first unresolved topic: add explicit current-question context for wrong-question and late-answer validation
 - next unresolved topics: deepen scoring behavior, add more answer rejection cases, and keep expanding the integration harness
 
 ## Verification History
@@ -222,3 +228,4 @@ Tomorrow's intended entry point:
 - Verified the split unit and integration suites locally with `npm run test:unit`, `npm run test:integration`, and `npm test`
 - Verified the answer-submission slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`
 - Verified the session-update-fanout slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`
+- Verified the phase-aware rejection slice locally with `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm test`, and `npm run build`

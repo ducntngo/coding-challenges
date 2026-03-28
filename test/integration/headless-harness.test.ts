@@ -9,7 +9,7 @@ import { createApp } from "../../src/app/create-app";
 import type { AppDependencies } from "../../src/app/dependencies";
 import type { QuizDefinition, QuizDefinitionSource } from "../../src/quiz-source/contracts";
 import { StubScoringService } from "../../src/scoring/stub-scoring-service";
-import type { SessionSnapshot } from "../../src/session/contracts";
+import type { SessionAggregate, SessionSnapshot } from "../../src/session/contracts";
 import { StubQuizSessionService } from "../../src/session/stub-quiz-session-service";
 import { InMemorySessionStore } from "../../src/store/in-memory-session-store";
 import { DefaultTransportCommandHandler } from "../../src/transport/default-transport-command-handler";
@@ -454,6 +454,62 @@ test("headless integration harness covers multiple players across concurrent ses
   assert.match(carolJoinPayload.self.reconnectToken, /.+/);
 });
 
+test("headless integration harness rejects answers when the session phase is closed", async (t) => {
+  const deps = buildIntegrationDependencies();
+  const app = createApp({
+    deps,
+    logger: false,
+  });
+  const clients: IntegrationTestClient[] = [];
+
+  t.after(async () => {
+    await Promise.allSettled(clients.map(async (client) => client.close()));
+    await app.close();
+  });
+
+  const address = await app.listen({
+    port: 0,
+    host: "127.0.0.1",
+  });
+  const wsUrl = buildWebSocketUrl(address, "/ws");
+  const aliceConnection = await IntegrationTestClient.connect(wsUrl);
+
+  clients.push(aliceConnection);
+
+  await aliceConnection.sendCommand({
+    command: "session.join",
+    requestId: "req-join-phase-closed",
+    payload: {
+      quizId: "demo-quiz",
+      displayName: "Alice",
+    },
+  });
+
+  const existingSession = await deps.sessionStore.getActiveSession("demo-quiz");
+
+  assert.ok(existingSession);
+
+  await deps.sessionStore.saveSession(closeQuestionPhase(existingSession));
+
+  const rejectedEvent = await aliceConnection.sendCommand({
+    command: "answer.submit",
+    requestId: "req-answer-phase-closed",
+    payload: {
+      questionId: "question-1",
+      answer: "correct",
+    },
+  });
+
+  assert.deepEqual(rejectedEvent, {
+    event: "command.rejected",
+    requestId: "req-answer-phase-closed",
+    payload: {
+      code: "answer_rejected",
+      message: "Answers are not being accepted in phase question_closed.",
+    },
+  });
+});
+
 class StaticQuizDefinitionSource implements QuizDefinitionSource {
   private readonly quizzes: Map<string, QuizDefinition>;
 
@@ -734,4 +790,15 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
+}
+
+function closeQuestionPhase(session: SessionAggregate): SessionAggregate {
+  return {
+    ...session,
+    snapshot: {
+      ...session.snapshot,
+      phase: "question_closed",
+      version: session.snapshot.version + 1,
+    },
+  };
 }
