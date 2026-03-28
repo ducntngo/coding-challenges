@@ -26,4 +26,4 @@ Use module logs to capture:
 
 ## Status
 
-Placeholder structure only. Module working logs should be added when module design sessions become substantive.
+Active. Module working logs should be added or updated whenever a module design pass changes durable assumptions, boundaries, or resume context.
