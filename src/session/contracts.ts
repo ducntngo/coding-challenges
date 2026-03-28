@@ -67,6 +67,7 @@ export interface ReconnectParticipantInput {
 }
 
 export interface DisconnectParticipantInput {
+  readonly quizId: string;
   readonly participantId: string;
   readonly connectionId: string;
 }

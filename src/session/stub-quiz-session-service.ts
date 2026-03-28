@@ -147,9 +147,45 @@ export class StubQuizSessionService implements QuizSessionService {
   }
 
   async disconnectParticipant(
-    _input: DisconnectParticipantInput,
+    input: DisconnectParticipantInput,
   ): Promise<void> {
-    return;
+    const existingSession = await this.sessionStore.getActiveSession(input.quizId);
+
+    if (!existingSession) {
+      return;
+    }
+
+    const participantRecord = existingSession.participantRecords.find(
+      (candidate) => candidate.participantId === input.participantId,
+    );
+
+    if (!participantRecord || participantRecord.connectionId !== input.connectionId) {
+      return;
+    }
+
+    const nextParticipantRecords = existingSession.participantRecords.map(
+      (candidate) => {
+        if (candidate.participantId !== input.participantId) {
+          return candidate;
+        }
+
+        const { connectionId: _connectionId, ...disconnectedParticipant } = candidate;
+
+        return {
+          ...disconnectedParticipant,
+          state: "disconnected" as const,
+        };
+      },
+    );
+
+    const nextSession = buildSessionAggregate({
+      existingSession,
+      participantRecords: nextParticipantRecords,
+      quizId: input.quizId,
+      sessionInstanceId: existingSession.snapshot.sessionInstanceId,
+    });
+
+    await this.sessionStore.saveSession(nextSession);
   }
 
   async getSessionSnapshot(quizId: string): Promise<SessionSnapshot | null> {
