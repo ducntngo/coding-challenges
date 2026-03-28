@@ -30,9 +30,11 @@ This repository is for a coding challenge submission. Contributors, including AI
 1. Update or confirm the relevant design doc.
 2. Implement one coherent slice.
 3. Keep the code change small and pair behavior changes with clear tests.
-4. Run the smallest useful verification commands.
-5. Update implementation status.
-6. Prepare the repo for the next contributor to continue without re-discovery.
+4. Keep the current integration harness passing whenever runtime behavior or stubs change.
+5. Extend the existing integration harness when a new multi-client or cross-session scenario becomes possible.
+6. Run the smallest useful verification commands.
+7. Update implementation status.
+8. Prepare the repo for the next contributor to continue without re-discovery.
 
 ## Code Standards
 
@@ -42,6 +44,9 @@ This repository is for a coding challenge submission. Contributors, including AI
 - Add tests for scoring, ranking, session state, and protocol handling.
 - Treat tests as part of the implementation slice, especially for behavior changes.
 - If a useful test cannot be added yet, call that out explicitly in the PR or status update.
+- Treat the existing integration harness as a maintained guard rail, not a one-time milestone.
+- If a change affects runtime behavior or harness-covered stubs, keep `npm run test:integration` passing in the same slice.
+- When new end-to-end scenarios become possible, add them to the current harness instead of creating disconnected one-off integration flows.
 - Favor deterministic behavior and explicit error handling.
 - Follow the selected stage-3 stack unless a change is explicitly approved and documented.
 

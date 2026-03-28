@@ -34,8 +34,10 @@ This file defines how AI assistants should work in this repository. It is the pr
 3. Update design docs if implementation changes the plan materially.
 4. Implement the smallest complete slice possible.
 5. Keep code changes small and pair each behavior change with clear tests.
-6. Verify with tests or other explicit checks.
-7. Update `docs/IMPLEMENTATION_STATUS.md` with what changed, what is next, and any open risks.
+6. Keep the current integration harness passing whenever runtime behavior or stubs change.
+7. Expand the existing integration harness when new end-to-end scenarios become possible instead of creating disconnected one-off flows.
+8. Verify with tests or other explicit checks.
+9. Update `docs/IMPLEMENTATION_STATUS.md` with what changed, what is next, and any open risks.
 
 ## AI Usage Rules
 
@@ -95,6 +97,9 @@ This file defines how AI assistants should work in this repository. It is the pr
 - Keep code changes small enough to review quickly and verify confidently.
 - Treat tests as part of the change, not optional follow-up work.
 - Every behavior-changing code slice should have clear tests or an explicit reason why a useful test does not exist yet.
+- Treat the current integration harness as a standing guard rail for module work, not an optional extra.
+- If a change touches runtime behavior or stubbed seams used by the harness, keep the harness passing or update it in the same slice.
+- When a new multi-client or cross-session scenario becomes testable, extend the existing integration harness instead of creating a disconnected scenario elsewhere.
 - Do not lock in a tech stack prematurely; language, framework, and transport choices should be decided in the later planning stage.
 - Keep external dependencies minimal unless they materially improve delivery speed or correctness.
 - Make real-time events explicit and versionable.
