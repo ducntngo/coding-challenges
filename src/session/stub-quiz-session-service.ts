@@ -22,12 +22,14 @@ export interface StubQuizSessionServiceOptions {
   readonly participantIdGenerator?: () => string;
   readonly reconnectTokenGenerator?: () => string;
   readonly sessionInstanceIdGenerator?: () => string;
+  readonly now?: () => number;
 }
 
 export class StubQuizSessionService implements QuizSessionService {
   private readonly participantIdGenerator: () => string;
   private readonly reconnectTokenGenerator: () => string;
   private readonly sessionInstanceIdGenerator: () => string;
+  private readonly now: () => number;
 
   constructor(
     private readonly sessionStore: SessionStore,
@@ -40,6 +42,7 @@ export class StubQuizSessionService implements QuizSessionService {
       options.reconnectTokenGenerator ?? randomUUID;
     this.sessionInstanceIdGenerator =
       options.sessionInstanceIdGenerator ?? randomUUID;
+    this.now = options.now ?? Date.now;
   }
 
   async joinSession(input: JoinSessionInput): Promise<SessionBindingResult> {
@@ -53,6 +56,8 @@ export class StubQuizSessionService implements QuizSessionService {
 
     const existingSession = await this.sessionStore.getActiveSession(input.quizId);
     const participantRecords = existingSession?.participantRecords ?? [];
+    const currentQuestionId =
+      existingSession?.snapshot.currentQuestionId ?? quiz.questionIds[0] ?? null;
     const participantRecord: ParticipantRecord = {
       participantId: this.participantIdGenerator(),
       displayName: normalizeDisplayName(input.displayName),
@@ -72,8 +77,13 @@ export class StubQuizSessionService implements QuizSessionService {
         existingSession?.snapshot.sessionInstanceId ??
         this.sessionInstanceIdGenerator(),
       phase: existingSession?.snapshot.phase ?? "question_open",
-      currentQuestionId:
-        existingSession?.snapshot.currentQuestionId ?? quiz.questionIds[0] ?? null,
+      currentQuestionId,
+      currentQuestionOpenedAtMs: resolveCurrentQuestionOpenedAtMs({
+        existingSession,
+        participantRecords,
+        currentQuestionId,
+        now: this.now,
+      }),
     });
 
     await this.sessionStore.saveSession(nextSession);
@@ -137,6 +147,7 @@ export class StubQuizSessionService implements QuizSessionService {
       sessionInstanceId: existingSession.snapshot.sessionInstanceId,
       phase: existingSession.snapshot.phase,
       currentQuestionId: existingSession.snapshot.currentQuestionId,
+      currentQuestionOpenedAtMs: existingSession.currentQuestionOpenedAtMs,
     });
 
     await this.sessionStore.saveSession(nextSession);
@@ -192,6 +203,7 @@ export class StubQuizSessionService implements QuizSessionService {
       sessionInstanceId: existingSession.snapshot.sessionInstanceId,
       phase: existingSession.snapshot.phase,
       currentQuestionId: existingSession.snapshot.currentQuestionId,
+      currentQuestionOpenedAtMs: existingSession.currentQuestionOpenedAtMs,
     });
 
     await this.sessionStore.saveSession(nextSession);
@@ -213,4 +225,33 @@ export type { QuizSessionService } from "./contracts";
 function normalizeDisplayName(displayName: string | undefined): string | null {
   const trimmed = displayName?.trim();
   return trimmed ? trimmed : null;
+}
+
+function resolveCurrentQuestionOpenedAtMs({
+  existingSession,
+  participantRecords,
+  currentQuestionId,
+  now,
+}: {
+  existingSession: SessionAggregate | null;
+  participantRecords: readonly ParticipantRecord[];
+  currentQuestionId: string | null;
+  now: () => number;
+}): number | null {
+  if (currentQuestionId === null) {
+    return null;
+  }
+
+  if (existingSession === null) {
+    return now();
+  }
+
+  if (
+    participantRecords.length === 0 &&
+    existingSession.snapshot.phase === "question_open"
+  ) {
+    return now();
+  }
+
+  return existingSession.currentQuestionOpenedAtMs;
 }

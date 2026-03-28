@@ -4,6 +4,8 @@ export interface AnswerSubmission {
   readonly questionId: string;
   readonly answer: string;
   readonly acceptedAnswer: string;
+  readonly questionOpenedAtMs: number;
+  readonly receivedAtMs: number;
   readonly currentScore: number;
 }
 

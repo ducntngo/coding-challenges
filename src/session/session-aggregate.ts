@@ -7,6 +7,7 @@ export function buildSessionAggregate({
   sessionInstanceId,
   phase,
   currentQuestionId,
+  currentQuestionOpenedAtMs,
 }: {
   existingSession: SessionAggregate | null;
   participantRecords: readonly ParticipantRecord[];
@@ -14,6 +15,7 @@ export function buildSessionAggregate({
   sessionInstanceId: string;
   phase: SessionAggregate["snapshot"]["phase"];
   currentQuestionId: string | null;
+  currentQuestionOpenedAtMs: number | null;
 }): SessionAggregate {
   return {
     snapshot: {
@@ -36,9 +38,10 @@ export function buildSessionAggregate({
           displayName: participantRecord.displayName,
           score: participantRecord.score,
           rank: index + 1,
-        })),
+      })),
     },
     participantRecords,
+    currentQuestionOpenedAtMs,
   };
 }
 

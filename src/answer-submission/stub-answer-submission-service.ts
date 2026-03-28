@@ -13,6 +13,7 @@ export class StubAnswerSubmissionService implements AnswerSubmissionService {
     private readonly sessionStore: SessionStore,
     private readonly quizDefinitionSource: QuizDefinitionSource,
     private readonly scoringService: ScoringService,
+    private readonly now: () => number = Date.now,
   ) {}
 
   async submitAnswer(input: SubmitAnswerInput): Promise<AnswerSubmissionResult> {
@@ -93,12 +94,17 @@ export class StubAnswerSubmissionService implements AnswerSubmissionService {
       };
     }
 
+    const receivedAtMs = this.now();
+
     const scoringResult = await this.scoringService.scoreSubmission({
       participantId: input.participantId,
       quizId: input.quizId,
       questionId: input.questionId,
       answer: input.answer,
       acceptedAnswer: questionDefinition.acceptedAnswer,
+      questionOpenedAtMs:
+        existingSession.currentQuestionOpenedAtMs ?? receivedAtMs,
+      receivedAtMs,
       currentScore: participantRecord.score,
     });
 
@@ -132,6 +138,7 @@ export class StubAnswerSubmissionService implements AnswerSubmissionService {
       sessionInstanceId: existingSession.snapshot.sessionInstanceId,
       phase: existingSession.snapshot.phase,
       currentQuestionId: existingSession.snapshot.currentQuestionId,
+      currentQuestionOpenedAtMs: existingSession.currentQuestionOpenedAtMs,
     });
 
     await this.sessionStore.saveSession(nextSession);

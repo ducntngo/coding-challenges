@@ -12,6 +12,8 @@ test("stub scoring service accepts a correct answer from quiz data", async () =>
     questionId: "question-1",
     answer: "  PaRiS ",
     acceptedAnswer: "paris",
+    questionOpenedAtMs: 1_000,
+    receivedAtMs: 2_000,
     currentScore: 25,
   });
 
@@ -31,6 +33,8 @@ test("stub scoring service returns zero for an incorrect answer from quiz data",
     questionId: "question-1",
     answer: "london",
     acceptedAnswer: "paris",
+    questionOpenedAtMs: 1_000,
+    receivedAtMs: 2_000,
     currentScore: 25,
   });
 
@@ -38,5 +42,47 @@ test("stub scoring service returns zero for an incorrect answer from quiz data",
     accepted: true,
     scoreDelta: 0,
     totalScore: 25,
+  });
+});
+
+test("stub scoring service linearly decays slower correct answers", async () => {
+  const scoringService = new StubScoringService();
+
+  const result = await scoringService.scoreSubmission({
+    participantId: "participant-1",
+    quizId: "demo-quiz",
+    questionId: "question-1",
+    answer: "paris",
+    acceptedAnswer: "paris",
+    questionOpenedAtMs: 1_000,
+    receivedAtMs: 16_000,
+    currentScore: 25,
+  });
+
+  assert.deepEqual(result, {
+    accepted: true,
+    scoreDelta: 64,
+    totalScore: 89,
+  });
+});
+
+test("stub scoring service floors very late correct answers", async () => {
+  const scoringService = new StubScoringService();
+
+  const result = await scoringService.scoreSubmission({
+    participantId: "participant-1",
+    quizId: "demo-quiz",
+    questionId: "question-1",
+    answer: "paris",
+    acceptedAnswer: "paris",
+    questionOpenedAtMs: 1_000,
+    receivedAtMs: 45_000,
+    currentScore: 25,
+  });
+
+  assert.deepEqual(result, {
+    accepted: true,
+    scoreDelta: 10,
+    totalScore: 35,
   });
 });

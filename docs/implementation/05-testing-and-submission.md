@@ -4,7 +4,7 @@
 
 ## Status
 
-Active draft. The early automated headless integration harness now exists, covers accepted answer flow plus session-wide score and leaderboard fanout, duplicate rejection, and now also covers closed-phase and wrong-question rejection driven by real internal question progression with transport-visible `session.snapshot` updates. The current scoring seam resolves correctness from quiz-definition answer data but still uses a simple fixed-score formula. It should deepen further as the score formula and richer late-answer paths become real.
+Active draft. The early automated headless integration harness now exists, covers accepted answer flow plus session-wide score and leaderboard fanout, duplicate rejection, and now also covers closed-phase and wrong-question rejection driven by real internal question progression with transport-visible `session.snapshot` updates. The current scoring seam resolves correctness from quiz-definition answer data and now uses a simple linear timing formula behind the existing interfaces. The remaining stage-5 gap is richer late-answer coverage in that same harness.
 
 Current scenario reference:
 

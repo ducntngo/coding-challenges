@@ -1,23 +1,9 @@
 import type { SessionAggregate } from "../session/contracts";
 import type { SessionStore } from "./contracts";
 
-const demoSession: SessionAggregate = {
-  snapshot: {
-    quizId: "demo-quiz",
-    sessionInstanceId: "session-demo-001",
-    status: "active",
-    phase: "question_open",
-    currentQuestionId: "question-1",
-    version: 1,
-    participants: [],
-    leaderboard: [],
-  },
-  participantRecords: [],
-};
-
 export class InMemorySessionStore implements SessionStore {
   private readonly sessions = new Map<string, SessionAggregate>([
-    [demoSession.snapshot.quizId, demoSession],
+    ["demo-quiz", buildSeededDemoSession()],
   ]);
 
   async getActiveSession(quizId: string): Promise<SessionAggregate | null> {
@@ -30,3 +16,20 @@ export class InMemorySessionStore implements SessionStore {
 }
 
 export type { SessionStore } from "./contracts";
+
+function buildSeededDemoSession(): SessionAggregate {
+  return {
+    snapshot: {
+      quizId: "demo-quiz",
+      sessionInstanceId: "session-demo-001",
+      status: "active",
+      phase: "question_open",
+      currentQuestionId: "question-1",
+      version: 1,
+      participants: [],
+      leaderboard: [],
+    },
+    participantRecords: [],
+    currentQuestionOpenedAtMs: Date.now(),
+  };
+}
