@@ -1,5 +1,6 @@
 import type { QuizSessionService } from "../session/contracts";
 import { SessionJoinRejectedError } from "../session/contracts";
+import { SessionReconnectRejectedError } from "../session/contracts";
 import type { ScoringService } from "../scoring/contracts";
 import type { ConnectionContext } from "./connection-context";
 import {
@@ -8,6 +9,7 @@ import {
   type InboundCommandEnvelope,
   type OutboundEventEnvelope,
   type SessionJoinPayload,
+  type SessionReconnectPayload,
   type TransportSessionView,
   type TransportErrorCode,
 } from "./contracts";
@@ -102,6 +104,48 @@ export class DefaultTransportCommandHandler implements TransportCommandHandler {
             buildRejectedEvent(
               envelope.requestId,
               "join_rejected",
+              error.message,
+            ),
+          ];
+        }
+
+        throw error;
+      }
+    }
+
+    if (envelope.command === "session.reconnect") {
+      const payload = validateSessionReconnectPayload(envelope.payload);
+
+      if (!payload.ok) {
+        return [
+          buildRejectedEvent(envelope.requestId, "invalid_payload", payload.message),
+        ];
+      }
+
+      try {
+        const result = await this.deps.sessionService.reconnectParticipant({
+          quizId: payload.value.quizId,
+          reconnectToken: payload.value.reconnectToken,
+          connectionId: ctx.connectionId,
+        });
+
+        ctx.state = "bound";
+        ctx.quizId = result.snapshot.quizId;
+        ctx.participantId = result.self.participantId;
+
+        return [
+          {
+            event: "session.reconnected",
+            ...(envelope.requestId ? { requestId: envelope.requestId } : {}),
+            payload: buildTransportSessionView(result),
+          },
+        ];
+      } catch (error) {
+        if (error instanceof SessionReconnectRejectedError) {
+          return [
+            buildRejectedEvent(
+              envelope.requestId,
+              "reconnect_rejected",
               error.message,
             ),
           ];
@@ -236,6 +280,47 @@ function validateSessionJoinPayload(
       ...(typeof candidate.displayName === "string"
         ? { displayName: candidate.displayName }
         : {}),
+    },
+  };
+}
+
+function validateSessionReconnectPayload(
+  payload: unknown,
+):
+  | { ok: true; value: SessionReconnectPayload }
+  | { ok: false; message: string } {
+  if (!payload || typeof payload !== "object") {
+    return {
+      ok: false,
+      message: "session.reconnect payload must be a JSON object.",
+    };
+  }
+
+  const candidate = payload as Record<string, unknown>;
+
+  if (typeof candidate.quizId !== "string" || candidate.quizId.trim() === "") {
+    return {
+      ok: false,
+      message: "session.reconnect payload must include a non-empty quizId.",
+    };
+  }
+
+  if (
+    typeof candidate.reconnectToken !== "string" ||
+    candidate.reconnectToken.trim() === ""
+  ) {
+    return {
+      ok: false,
+      message:
+        "session.reconnect payload must include a non-empty reconnectToken.",
+    };
+  }
+
+  return {
+    ok: true,
+    value: {
+      quizId: candidate.quizId.trim(),
+      reconnectToken: candidate.reconnectToken.trim(),
     },
   };
 }

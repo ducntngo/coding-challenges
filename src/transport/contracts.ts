@@ -53,6 +53,11 @@ export interface SessionJoinPayload {
   readonly displayName?: string;
 }
 
+export interface SessionReconnectPayload {
+  readonly quizId: string;
+  readonly reconnectToken: string;
+}
+
 export interface TransportSessionView {
   readonly session: {
     readonly quizId: string;
