@@ -4,12 +4,13 @@
 
 ## Status
 
-Stage-6 close-out draft. The automated headless integration harness now covers accepted answer flow plus session-wide score and leaderboard fanout, duplicate rejection, closed-phase rejection, wrong-question rejection, late-answer rejection after progression with transport-visible `session.snapshot` updates, and a deterministic slower-answer scoring case through that same real transport boundary. The current reviewer-facing demo path is now documented in `docs/implementation/06-demo-flow.md`, and the runtime now emits lightweight structured logs around joins, rejections, accepted answers, leaderboard updates, and progression snapshot fanout.
+Stage-7 packaging baseline. The automated headless integration harness now covers accepted answer flow plus session-wide score and leaderboard fanout, duplicate rejection, closed-phase rejection, wrong-question rejection, late-answer rejection after progression with transport-visible `session.snapshot` updates, and a deterministic slower-answer scoring case through that same real transport boundary. The current reviewer-facing demo path is documented in `docs/implementation/06-demo-flow.md`, and the repository now includes a `submission/` bundle that packages the design summary and AI collaboration summary.
 
 Current scenario reference:
 
 - `docs/implementation/headless-integration-scenario.md`
 - `docs/implementation/06-demo-flow.md`
+- `submission/README.md`
 
 ## Goal
 
@@ -35,7 +36,7 @@ Finish verification, documentation, and submission-ready packaging.
 8. Keep unit and integration suites separated so fast feedback and deeper end-to-end coverage can evolve independently.
 9. Treat the existing integration harness as the canonical place for new multi-client and cross-session scenarios instead of creating disconnected one-off flows.
 10. Keep the local multi-client demo flow lightweight and documentation-driven unless a dedicated client materially improves review quality.
-11. Write the AI collaboration document with prompts, tasks, and verification steps.
+11. Package the final reviewer-facing submission docs and AI summary.
 12. Tighten README instructions.
 13. Review the repository from a submission perspective.
 
@@ -44,4 +45,6 @@ Finish verification, documentation, and submission-ready packaging.
 - reviewer can run the project and tests from docs alone
 - reviewer can run an automated headless multi-player and multi-session integration test scenario from docs alone
 - AI usage is clearly documented
-- repository supports the final 5 to 10 minute walkthrough
+- repository supports a short, credible reviewer walkthrough without extra setup
+
+These criteria are now satisfied in-repo. Remaining work should be limited to smoke checks or genuine clarity fixes.

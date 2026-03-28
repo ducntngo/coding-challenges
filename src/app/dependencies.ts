@@ -46,13 +46,15 @@ export interface AppDependencies {
 
 export interface BuildDefaultDependenciesOptions {
   readonly now?: () => number;
+  readonly quizDefinitionSource?: QuizDefinitionSource;
 }
 
 export function buildDefaultDependencies(
   options: BuildDefaultDependenciesOptions = {},
 ): AppDependencies {
   const now = options.now ?? Date.now;
-  const quizDefinitionSource = new MockQuizDefinitionSource();
+  const quizDefinitionSource =
+    options.quizDefinitionSource ?? new MockQuizDefinitionSource();
   const sessionStore = new InMemorySessionStore();
   const sessionProgressionNotifier = new InMemorySessionProgressionNotifier();
   const sessionService = new StubQuizSessionService(

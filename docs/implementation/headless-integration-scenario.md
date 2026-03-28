@@ -110,6 +110,7 @@ Next planned additions:
 To inspect the current automated scenario:
 
 - read `test/integration/headless-harness.test.ts`
+- use `npm run simulate:game` first if you want a narrower live-server sanity check through the same `/ws` boundary
 - run `npm run test:integration`
 - use this document as the plain-language walkthrough for the same flow
 - use `docs/implementation/06-demo-flow.md` for the lightweight local server and manual WebSocket walkthrough

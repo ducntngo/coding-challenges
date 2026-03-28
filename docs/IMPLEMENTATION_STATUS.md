@@ -8,7 +8,7 @@ This file is active and should be kept current through implementation and verifi
 
 ## Current Snapshot
 
-Repository state is now just past stage 6 and into submission packaging. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The real participation flow is in place for `session.join`, `session.reconnect`, disconnect forwarding, accepted `answer.submit`, internal question progression, and transport-visible `session.snapshot` fanout when progression changes session state. The current scoring seam resolves correctness from quiz-definition answer data and applies a simple server-observed linear timing formula backed by question-open timestamps in session state. The headless WebSocket integration harness covers concurrent sessions, session-wide score or leaderboard fanout, duplicate-answer rejection without passive fanout, closed-phase answer rejection with progression snapshots, wrong-question rejection using explicit current-question context, late-answer rejection after progression without passive fanout, and deterministic slower-answer scoring through the real transport boundary. The runtime now also emits lightweight structured logs around joins, reconnects, accepted answers, rejections, leaderboard updates, and progression snapshot fanout, and the reviewer-facing run flow is documented without adding a dedicated frontend. The next step is to tighten the submission narrative rather than deepen the runtime surface.
+Repository state is now submission-ready in-repo. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The real participation flow is in place for `session.join`, `session.reconnect`, disconnect forwarding, accepted `answer.submit`, internal question progression, and transport-visible `session.snapshot` fanout when progression changes session state. The current scoring seam resolves correctness from quiz-definition answer data and applies a simple server-observed linear timing formula backed by question-open timestamps in session state. The headless WebSocket integration harness covers concurrent sessions, session-wide score or leaderboard fanout, duplicate-answer rejection without passive fanout, closed-phase answer rejection with progression snapshots, wrong-question rejection using explicit current-question context, late-answer rejection after progression without passive fanout, and deterministic slower-answer scoring through the real transport boundary. The runtime emits lightweight structured logs around joins, reconnects, accepted answers, rejections, leaderboard updates, and progression snapshot fanout, the reviewer-facing run flow is documented, a live-server simulation script exercises the happy-path game flow against `npm run dev`, a randomized local-only simulator now drives multi-round game time through the same WebSocket boundary with printed leaderboard snapshots, and the repository now includes a curated `submission/` bundle for design and AI collaboration packaging.
 
 ## Completed
 
@@ -109,21 +109,28 @@ Repository state is now just past stage 6 and into submission packaging. The des
 - Added a pure runtime log-event helper and unit coverage for join, rejection, accepted-answer, leaderboard-update, and progression fanout log summaries
 - Added lightweight structured logs around transport outcomes and progression snapshot fanout without widening the runtime transport contract
 - Added a reviewer-facing demo-flow document for local server startup, health verification, automated harness execution, and a minimal manual WebSocket walkthrough
+- Added a reviewer-facing `npm run simulate:game` script that connects to a running local server, joins several players, submits one answer, and verifies score plus leaderboard fanout through the real transport boundary
+- Added a local-only `npm run simulate:random-game` script that boots a temporary app instance, drives simulated game time for 2 to 5 players across 3 timed questions, prints the leaderboard throughout the run, and logs one random participant's point of view
+- Added a small dependency-builder seam so local tooling can inject a custom quiz definition source without widening the runtime transport surface
+- Added docs coverage for the running-server simulation path alongside the existing integration harness
+- Rewrote the submission-facing system design summary so it explicitly covers current runtime boundaries, verification paths, and a production scale path for storage, messaging, read models, and observability
 - Refined the scoring design notes so operational SQL or read-model storage serves live leaderboards while warehouses like BigQuery stay downstream analytics sinks
 - Verified the demo-flow-and-observability slice locally with `npm run typecheck`, `npm test`, and `npm run build`
+- Replaced the top-level README prompt-style content with a reviewer-facing repository entrypoint
+- Added a `submission/` bundle with a concise system design summary and AI collaboration summary
+- Updated the submission-phase docs so Stage 7 now reflects a complete repository-side package rather than only implementation-era working notes
 
 ## In Progress
 
-- Moving into stage-7 submission packaging now that the stage-6 hardening work is complete
-- Tightening the final reviewer story across docs, architecture notes, and AI collaboration artifacts instead of widening runtime scope
+- No further code changes are planned by default
+- Remaining work is external: perform any last smoke checks before delivery
 
 ## Next Recommended Steps
 
-1. Tighten the final submission docs and walkthrough order now that the runtime behavior is stable.
-2. Prepare the final AI collaboration summary from the existing commit-oriented diary entries.
-3. Review architecture, tradeoff, and module docs for a clean interviewer walkthrough.
-4. Keep the current simple linear scoring baseline and transport payloads stable unless a concrete bug appears.
-5. Keep the unit and integration suites as the authoritative verification baseline during packaging.
+1. Run a last smoke pass on Node.js `24.x` immediately before final delivery if desired.
+2. Keep the current simple linear scoring baseline and transport payloads stable unless a concrete bug appears.
+3. Keep the unit and integration suites as the authoritative verification baseline.
+4. Avoid widening scope now that the repository-side package is complete.
 
 ## Open Decisions
 
@@ -213,7 +220,8 @@ Intentional deferrals:
 - scoring correctness is now resolved from quiz-definition accepted answers instead of a hard-coded scoring sentinel
 - the current default score policy uses server-observed question-open and answer-receive timestamps, with a short full-score grace window followed by linear decay to a positive floor
 - the current observability baseline logs summary-level join, reconnect, rejection, accepted-answer, leaderboard-update, and progression-snapshot outcomes at the existing transport and progression seams
-- the current reviewer demo path is docs-driven, centered on `npm run dev`, `GET /health`, `npm run test:integration`, and a minimal manual WebSocket walkthrough rather than a dedicated client app
+- the current reviewer demo path is docs-driven, centered on `npm run dev`, `GET /health`, `npm run simulate:game`, `npm run simulate:random-game`, `npm run test:integration`, and only a minimal manual WebSocket walkthrough as fallback rather than a dedicated client app
+- the current submission bundle lives under `submission/` and is the intended reviewer-facing package
 
 ## Current Guidance
 
@@ -228,7 +236,7 @@ Use the completed module contracts plus the stage-3 scaffold as the baseline. St
 
 ## Current Module Focus
 
-- Active focus: `stage 7 submission packaging`
+- Active focus: `submission-ready baseline`
 
 ## Handoff Notes
 
@@ -243,14 +251,16 @@ Any new session should start by reading:
 7. `docs/modules/realtime-transport.md`
 8. `docs/modules/scoring-and-leaderboard.md`
 9. `docs/modules/observability-and-operations.md`
-10. `docs/implementation/06-demo-flow.md`
-11. `scripts/bootstrap.sh`
+10. `submission/README.md`
+11. `submission/SYSTEM_DESIGN.md`
+12. `submission/AI_COLLABORATION.md`
+14. `docs/implementation/06-demo-flow.md`
+15. `scripts/bootstrap.sh`
 
 Tomorrow's intended entry point:
 
-- active focus: `stage 7 submission packaging`
-- first unresolved topic: tighten the final reviewer walkthrough and submission-facing documentation
-- next unresolved topics: synthesize the AI diary trail and verify final doc consistency
+- active focus: `submission-ready baseline`
+- next unresolved topics: only smoke checks or true bug fixes if needed
 
 ## Verification History
 
