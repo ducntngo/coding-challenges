@@ -8,7 +8,7 @@ This file is active and should be kept current through implementation and verifi
 
 ## Current Snapshot
 
-Repository state is now at the end of stage 5 and into stage 6 hardening. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The real participation flow is in place for `session.join`, `session.reconnect`, disconnect forwarding, accepted `answer.submit`, internal question progression, and transport-visible `session.snapshot` fanout when progression changes session state. The current scoring seam resolves correctness from quiz-definition answer data and applies a simple server-observed linear timing formula backed by question-open timestamps in session state. The headless WebSocket integration harness now covers concurrent sessions, session-wide score or leaderboard fanout, duplicate-answer rejection without passive fanout, closed-phase answer rejection with progression snapshots, wrong-question rejection using explicit current-question context, and late-answer rejection after progression without passive fanout. The next step is to deepen stage-6 hardening with slower-answer coverage, demo flow, and observability hooks.
+Repository state is now in stage 6 hardening. The design baseline is stable, the selected stack is scaffolded, lightweight CI exists, and the repo now has a runnable Fastify plus WebSocket foundation with interface-first seams, in-memory or mocked adapters, and guard-rail tests. The real participation flow is in place for `session.join`, `session.reconnect`, disconnect forwarding, accepted `answer.submit`, internal question progression, and transport-visible `session.snapshot` fanout when progression changes session state. The current scoring seam resolves correctness from quiz-definition answer data and applies a simple server-observed linear timing formula backed by question-open timestamps in session state. The headless WebSocket integration harness now covers concurrent sessions, session-wide score or leaderboard fanout, duplicate-answer rejection without passive fanout, closed-phase answer rejection with progression snapshots, wrong-question rejection using explicit current-question context, late-answer rejection after progression without passive fanout, and deterministic slower-answer scoring through the real transport boundary. The next step is to keep stage 6 moving with demo-flow and observability hardening.
 
 ## Completed
 
@@ -103,17 +103,20 @@ Repository state is now at the end of stage 5 and into stage 6 hardening. The de
 - Expanded the headless integration harness so a stale answer for the previous question is rejected after progression to the next question
 - Added harness assertions that progressed late-answer rejections stay connection-local and do not prevent a later accepted answer for the new active question
 - Verified the late-answer-harness slice locally with `npm run test:integration`
+- Expanded the headless integration harness with a deterministic slower-answer scoring case through the real WebSocket transport boundary
+- Added a harness-local clock seam so the integration flow can exercise score decay deterministically without widening the runtime transport contract
+- Verified the slow-answer-harness slice locally with `npm run typecheck`, `npm test`, and `npm run build`
 
 ## In Progress
 
-- Moving into stage-6 hardening around deterministic slower-answer coverage, reviewer demo flow, and lightweight observability
+- Moving through stage-6 hardening around reviewer demo flow and lightweight observability now that deterministic slower-answer coverage exists
 - Keeping scoring behavior and answer-result mapping behind the established interfaces while the existing harness grows instead of being replaced
 
 ## Next Recommended Steps
 
-1. Add a deterministic slower-answer scoring case to the current headless harness now that the linear score baseline exists.
-2. Improve the local multi-client demo path and reviewer-facing run instructions.
-3. Add lightweight observability hooks around joins, progression, accepted answers, and rejections.
+1. Improve the local multi-client demo path and reviewer-facing run instructions.
+2. Add lightweight observability hooks around joins, progression, accepted answers, and rejections.
+3. Keep the simple linear scoring baseline stable while the demo and observability slices deepen.
 4. Keep the unit and integration suites separate as coverage grows.
 5. Keep `docs/ai-usage/` updated as work lands in commits.
 
@@ -213,7 +216,6 @@ Use the completed module contracts plus the stage-3 scaffold as the baseline. St
 
 - the current scoring behavior now uses an intentionally simple linear timing model, but the constants are still lightweight challenge defaults rather than a deeply tuned formula
 - progression is visible through transport snapshots, but there is still no host-facing progression command in the current scaffold
-- the headless harness still exercises only the fast-path full-score branch through the real transport boundary; slower score decay remains unit-covered only
 - No richer observability hooks exist beyond the minimal health surface and app logging
 
 ## Current Module Focus
@@ -238,8 +240,8 @@ Any new session should start by reading:
 Tomorrow's intended entry point:
 
 - active focus: `stage 6 test, demo, and observability hardening`
-- first unresolved topic: add a deterministic slower-answer scoring case through the current headless integration harness
-- next unresolved topics: improve the demo flow and add lightweight observability while preserving the current linear scoring baseline
+- first unresolved topic: improve the demo flow and reviewer-facing run instructions
+- next unresolved topics: add lightweight observability while preserving the current linear scoring baseline
 
 ## Verification History
 
@@ -271,3 +273,4 @@ Tomorrow's intended entry point:
 - Verified the linear-scoring-timing slice locally with `npm test` and `npm run build`
 - Verified the late-answer-harness slice locally with `npm run test:integration`
 - Verified the scoring-answer-data slice locally with `npm test` and `npm run build`
+- Verified the slow-answer-harness slice locally with `npm run typecheck`, `npm test`, and `npm run build`

@@ -57,6 +57,13 @@ And a richer multi-client late-answer scenario:
 - Alice submits a stale answer for `question-1`, which is rejected without fanout to Bob
 - Alice then submits an answer for the new active `question-2`, which is accepted and fans out normally
 
+And a deterministic slower-answer scoring scenario:
+
+- Alice and Bob join `demo-quiz`
+- the harness fixes the server-observed clock so question-open and answer-receive times are predictable
+- Alice submits a correct answer after the full-score grace window but before the minimum-score floor
+- both clients receive the same decayed `participant.score.updated` and `leaderboard.updated` result for that accepted answer
+
 ## What The Harness Asserts
 
 The automated harness currently checks:
@@ -65,7 +72,7 @@ The automated harness currently checks:
 - correct participant membership per session
 - accepted `answer.submit` handling for the current stubbed scoring path
 - score correctness resolved from quiz-definition accepted answers rather than a hard-coded transport sentinel
-- the current scoring implementation is timing-based, but the harness still exercises only the fast-path full-score branch today
+- deterministic slower-answer score decay through the real transport boundary
 - `participant.score.updated` and `leaderboard.updated` command results for the submitting client
 - session-wide fanout of the same two events to the other active participant in that session
 - duplicate-answer rejection without passive fanout
@@ -87,7 +94,6 @@ The automated harness currently checks:
 
 This scenario intentionally reflects the current implementation rather than the final target behavior.
 
-- the scoring behavior is now deterministic and timing-based, but the current harness does not yet cover slower-answer score decay through the real transport boundary
 - the current scaffold starts sessions in `question_open` because host-driven phase progression is not implemented yet
 - progression changes are currently surfaced through an internal service and `session.snapshot` fanout rather than a host-facing transport command
 
@@ -97,8 +103,8 @@ As the implementation deepens, this same scenario should grow rather than be rep
 
 Next planned additions:
 
-- a deterministic slower-answer scoring case through the real transport boundary
-- more question-phase-aware answer handling
+- reviewer-facing local demo instructions for the current real-time flow
+- lightweight observability hooks around joins, progression, accepted answers, and rejections
 
 ## Reviewer Guidance
 
