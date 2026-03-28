@@ -4,7 +4,7 @@
 
 ## Status
 
-Active draft. The final submission checks still land later, but the automated headless integration harness should start earlier and deepen as participation and scoring behavior become real.
+Active draft. The early automated headless integration harness now exists and should deepen as participation and scoring behavior become real.
 
 ## Goal
 
@@ -21,15 +21,16 @@ Finish verification, documentation, and submission-ready packaging.
 ## Detailed Steps
 
 1. Add tests for scoring, ranking, and session behavior.
-2. Start an automated headless integration harness early, even before every behavior is fully implemented.
+2. Keep the headless integration harness running against the real transport boundary.
 3. Drive multiple simulated players across concurrent quiz sessions through the real transport boundary.
 4. Stub or mock unfinished answer, scoring, or leaderboard behavior behind the existing interfaces until those modules are ready.
 5. Expand the same harness as answer handling and leaderboard updates become real.
 6. Keep the scenario headless and code-driven instead of building a full frontend for test coverage.
-7. Add a simple local multi-client demo flow.
-8. Write the AI collaboration document with prompts, tasks, and verification steps.
-9. Tighten README instructions.
-10. Review the repository from a submission perspective.
+7. Keep unit and integration suites separated so fast feedback and deeper end-to-end coverage can evolve independently.
+8. Add a simple local multi-client demo flow.
+9. Write the AI collaboration document with prompts, tasks, and verification steps.
+10. Tighten README instructions.
+11. Review the repository from a submission perspective.
 
 ## Exit Criteria
 

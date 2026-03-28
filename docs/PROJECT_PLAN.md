@@ -70,7 +70,7 @@ Within layer 2, the implementation sequence should be:
 | 1. Refine design boundary and execution plan | Completed | Solution scope, execution sequence, and design workflow are now explicit. |
 | 2. Define architecture and module contracts | Completed | Architecture baseline, stable first-pass module contracts, and the open-question review are complete. No remaining architecture blocker currently prevents stack selection. |
 | 3. Select stack, add CI, and scaffold interfaces | Completed | The selected stack, lightweight CI, onboarding script, source tree, interface seams, in-memory or mocked adapters, and initial guard-rail tests are now in place. |
-| 4. Add guard-rail tests and participation skeleton | In progress | Join, reconnect, and disconnect slices are now in place. Next add an early headless integration harness and deepen answer-submission behavior behind the same interfaces. |
+| 4. Add guard-rail tests and participation skeleton | In progress | Join, reconnect, disconnect, and the first early headless integration harness are now in place. Next deepen answer-submission behavior behind the same interfaces and expand the harness. |
 | 5. Implement scoring and leaderboard flow | Pending | Deepen the stubbed scoring, ranking, and live update paths without breaking the established interfaces or guard-rail tests. |
 | 6. Strengthen tests, demo flow, and observability hooks | Pending | Expand tests, add an automated headless multi-player and multi-session integration scenario, improve the local multi-client demo path, and add logging plus developer run instructions. |
 | 7. Finalize submission package | Pending | Final docs, AI collaboration summary, architecture diagram, and video preparation notes. |
@@ -122,16 +122,16 @@ Current stage: `4. Add guard-rail tests and participation skeleton`
 
 Immediate next outputs:
 
-- add an early automated headless integration harness using the real transport and session seams plus stubs for unfinished behavior
 - start the first accepted `answer.submit` path behind the existing seams
+- expand the early automated headless integration harness as answer and scoring behavior become real
 - keep the transport adapter thin while session behavior starts to deepen
 - keep `docs/IMPLEMENTATION_STATUS.md` aligned with the current implementation stage
 
 ## Current Next Steps
 
-1. Add an early automated headless integration harness that exercises join, reconnect, disconnect, and session isolation across multiple clients and quiz sessions.
-2. Keep unfinished answer and scoring behavior stubbed inside that harness until those modules deepen.
-3. Start the first accepted `answer.submit` path behind the established seams.
+1. Start the first accepted `answer.submit` path behind the established seams.
+2. Keep unfinished scoring behavior stubbed where needed while answer handling deepens.
+3. Expand the early headless integration harness to cover accepted answer flow and result mapping.
 4. Map scoring outcomes into transport events without thickening the transport layer.
 5. Add the first leaderboard-update assertions once answer acceptance exists.
 
@@ -154,9 +154,9 @@ Read in this order:
 
 Resume with these implementation decisions first:
 
-- build the first thin automated headless integration harness over the current join, reconnect, and disconnect seams
-- keep unfinished answer and scoring behavior stubbed where needed so the harness can start early
 - start the first accepted `answer.submit` path
+- expand the existing headless integration harness instead of creating a separate one-off test path
+- keep unfinished scoring behavior stubbed where needed while answer handling deepens
 - keep the current join and reconnect payload shape stable unless there is a strong reason to change it
 
 After the first full pass through the design docs:

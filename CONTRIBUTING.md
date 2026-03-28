@@ -78,7 +78,9 @@ Current baseline commands:
 
 - install and bootstrap: `npm run bootstrap`
 - typecheck: `npm run typecheck`
-- unit tests: `npm test`
+- unit tests: `npm run test:unit`
+- integration tests: `npm run test:integration`
+- full test suite: `npm test`
 - build: `npm run build`
 - local development server: `npm run dev`
 
