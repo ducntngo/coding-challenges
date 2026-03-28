@@ -49,6 +49,14 @@ And another rejection scenario:
 - a later `answer.submit` attempt for the previous question is rejected without mutating session state
 - a submission for the new active question is still accepted
 
+And a richer multi-client late-answer scenario:
+
+- Alice and Bob join `demo-quiz`
+- the internal progression service advances the session from `question-1` to `question-2`
+- both active clients receive a `session.snapshot` event with the new question reference
+- Alice submits a stale answer for `question-1`, which is rejected without fanout to Bob
+- Alice then submits an answer for the new active `question-2`, which is accepted and fans out normally
+
 ## What The Harness Asserts
 
 The automated harness currently checks:
@@ -70,6 +78,8 @@ The automated harness currently checks:
 - cross-session isolation throughout the sequence
 - rejection when a session is not in `question_open`
 - rejection when a submission targets a question other than the active `currentQuestionId`
+- rejection when a progressed late answer targets the previous question after clients have received the next-question snapshot
+- absence of passive fanout for that progressed late-answer rejection
 - `session.snapshot` delivery to active clients when progression closes or advances a question
 - successful acceptance after internal progression moves the active question forward
 
@@ -77,7 +87,7 @@ The automated harness currently checks:
 
 This scenario intentionally reflects the current implementation rather than the final target behavior.
 
-- the scoring behavior is now deterministic and timing-based, but the current harness does not yet cover slower-answer score decay or any timing-driven late-answer edge
+- the scoring behavior is now deterministic and timing-based, but the current harness does not yet cover slower-answer score decay through the real transport boundary
 - the current scaffold starts sessions in `question_open` because host-driven phase progression is not implemented yet
 - progression changes are currently surfaced through an internal service and `session.snapshot` fanout rather than a host-facing transport command
 
@@ -87,7 +97,6 @@ As the implementation deepens, this same scenario should grow rather than be rep
 
 Next planned additions:
 
-- richer late-answer rejection scenarios on top of the current duplicate and progression snapshot flow
 - a deterministic slower-answer scoring case through the real transport boundary
 - more question-phase-aware answer handling
 

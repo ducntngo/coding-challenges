@@ -669,6 +669,172 @@ test("headless integration harness rejects answers for a non-active question", a
   );
 });
 
+test("headless integration harness rejects late answers after advancement without passive fanout", async (t) => {
+  const deps = buildIntegrationDependencies();
+  const app = createApp({
+    deps,
+    logger: false,
+  });
+  const clients: IntegrationTestClient[] = [];
+
+  t.after(async () => {
+    await Promise.allSettled(clients.map(async (client) => client.close()));
+    await app.close();
+  });
+
+  const address = await app.listen({
+    port: 0,
+    host: "127.0.0.1",
+  });
+  const wsUrl = buildWebSocketUrl(address, "/ws");
+  const [aliceConnection, bobConnection] = await Promise.all([
+    IntegrationTestClient.connect(wsUrl),
+    IntegrationTestClient.connect(wsUrl),
+  ]);
+
+  clients.push(aliceConnection, bobConnection);
+
+  const aliceJoinEvent = await aliceConnection.sendCommand({
+    command: "session.join",
+    requestId: "req-join-late-answer-alice",
+    payload: {
+      quizId: "demo-quiz",
+      displayName: "Alice",
+    },
+  });
+  const bobJoinEvent = await bobConnection.sendCommand({
+    command: "session.join",
+    requestId: "req-join-late-answer-bob",
+    payload: {
+      quizId: "demo-quiz",
+      displayName: "Bob",
+    },
+  });
+
+  const aliceJoinPayload = assertSessionEvent(
+    aliceJoinEvent,
+    "session.joined",
+    "demo-quiz",
+    1,
+  );
+  const bobJoinPayload = assertSessionEvent(
+    bobJoinEvent,
+    "session.joined",
+    "demo-quiz",
+    2,
+  );
+
+  const advancedSnapshot = await deps.progressionService.advanceToNextQuestion(
+    "demo-quiz",
+  );
+
+  assert.equal(advancedSnapshot.phase, "question_open");
+  assert.equal(advancedSnapshot.currentQuestionId, "question-2");
+
+  const [aliceSnapshotEvent, bobSnapshotEvent] = await Promise.all([
+    aliceConnection.readEvents(1),
+    bobConnection.readEvents(1),
+  ]);
+
+  assertSessionSnapshotEvent(
+    aliceSnapshotEvent[0]!,
+    "demo-quiz",
+    "question_open",
+    "question-2",
+    "Alice",
+  );
+  assertSessionSnapshotEvent(
+    bobSnapshotEvent[0]!,
+    "demo-quiz",
+    "question_open",
+    "question-2",
+    "Bob",
+  );
+
+  const rejectedEvent = await aliceConnection.sendCommand({
+    command: "answer.submit",
+    requestId: "req-answer-late-question-1",
+    payload: {
+      questionId: "question-1",
+      answer: "correct",
+    },
+  });
+
+  assert.deepEqual(rejectedEvent, {
+    event: "command.rejected",
+    requestId: "req-answer-late-question-1",
+    payload: {
+      code: "answer_rejected",
+      message:
+        "Question question-1 is not the active question for quiz demo-quiz.",
+    },
+  });
+
+  await bobConnection.expectNoEventWithin(75);
+
+  const [aliceAcceptedEvents, bobFanoutEvents] = await Promise.all([
+    aliceConnection.sendCommandAndReadEvents(
+      {
+        command: "answer.submit",
+        requestId: "req-answer-late-current-question",
+        payload: {
+          questionId: "question-2",
+          answer: "correct",
+        },
+      },
+      2,
+    ),
+    bobConnection.readEvents(2),
+  ]);
+
+  assert.equal(aliceAcceptedEvents.length, 2);
+  assert.equal(bobFanoutEvents.length, 2);
+
+  assertScoreEvent(
+    aliceAcceptedEvents[0]!,
+    "req-answer-late-current-question",
+    aliceJoinPayload.self.participantId,
+    "demo-quiz",
+    100,
+    100,
+    "question-2",
+  );
+  assertLeaderboardEvent(
+    aliceAcceptedEvents[1]!,
+    "req-answer-late-current-question",
+    "demo-quiz",
+  );
+  assertScoreEvent(
+    bobFanoutEvents[0]!,
+    undefined,
+    aliceJoinPayload.self.participantId,
+    "demo-quiz",
+    100,
+    100,
+    "question-2",
+  );
+  const bobLeaderboardEvent = assertLeaderboardEvent(
+    bobFanoutEvents[1]!,
+    undefined,
+    "demo-quiz",
+  );
+
+  assert.deepEqual(bobLeaderboardEvent.leaderboard, [
+    {
+      participantId: aliceJoinPayload.self.participantId,
+      displayName: "Alice",
+      score: 100,
+      rank: 1,
+    },
+    {
+      participantId: bobJoinPayload.self.participantId,
+      displayName: "Bob",
+      score: 0,
+      rank: 2,
+    },
+  ]);
+});
+
 class StaticQuizDefinitionSource implements QuizDefinitionSource {
   private readonly quizzes: Map<string, QuizDefinition>;
 
