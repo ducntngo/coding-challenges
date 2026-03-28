@@ -24,6 +24,8 @@ Implement the backend real-time quiz server as the primary component. Mock the r
 - After stack selection, add a simple CI pipeline before deeper implementation so the initial scaffold has an automated check path.
 - Put all planned module seams in place early, using mocks or placeholders where downstream pieces are not ready yet.
 - Add bare-bones tests as soon as the seams exist so they act as guard rails while implementations deepen.
+- Once the headless integration harness exists, treat it as an evolving guard rail that must keep passing as runtime behavior grows.
+- Expand the existing integration harness when new end-to-end scenarios become possible instead of creating disconnected scenario files for the same workflow.
 - Treat the markdown docs as the planning surface and keep them synchronized with real progress.
 - Preserve a clear AI-collaboration trail through diary entries and status updates.
 
@@ -169,6 +171,8 @@ With the foundation scaffold in place:
 
 - keep all deeper work behind the existing interfaces
 - expand tests before or alongside each new behavior slice
+- keep the current integration harness passing as runtime behavior and stubs change
+- add new multi-client and cross-session scenarios to the existing harness as they become possible
 - keep unfinished downstream behavior mocked or stubbed until its turn arrives
 - preserve the lightweight CI baseline while behavior grows
 

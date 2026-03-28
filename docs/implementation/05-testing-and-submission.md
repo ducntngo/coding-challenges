@@ -27,10 +27,11 @@ Finish verification, documentation, and submission-ready packaging.
 5. Expand the same harness as answer handling and leaderboard updates become real.
 6. Keep the scenario headless and code-driven instead of building a full frontend for test coverage.
 7. Keep unit and integration suites separated so fast feedback and deeper end-to-end coverage can evolve independently.
-8. Add a simple local multi-client demo flow.
-9. Write the AI collaboration document with prompts, tasks, and verification steps.
-10. Tighten README instructions.
-11. Review the repository from a submission perspective.
+8. Treat the existing integration harness as the canonical place for new multi-client and cross-session scenarios instead of creating disconnected one-off flows.
+9. Add a simple local multi-client demo flow.
+10. Write the AI collaboration document with prompts, tasks, and verification steps.
+11. Tighten README instructions.
+12. Review the repository from a submission perspective.
 
 ## Exit Criteria
 

@@ -152,7 +152,7 @@ Intentional deferrals:
 
 ## Current Guidance
 
-Use the completed module contracts plus the stage-3 scaffold as the baseline. Start new implementation work with `npm run bootstrap`, keep behavior changes behind the existing interfaces, and add or expand tests before deepening each flow. CI should stay lightweight and authoritative on Node.js `24.x`.
+Use the completed module contracts plus the stage-3 scaffold as the baseline. Start new implementation work with `npm run bootstrap`, keep behavior changes behind the existing interfaces, and add or expand tests before deepening each flow. Treat the current integration harness as a maintained guard rail: if a change touches runtime behavior or harness-covered stubs, keep it passing and extend it when new end-to-end scenarios become possible. CI should stay lightweight and authoritative on Node.js `24.x`.
 
 ## Known Gaps
 
