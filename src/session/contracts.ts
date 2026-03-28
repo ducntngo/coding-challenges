@@ -86,3 +86,10 @@ export class SessionJoinRejectedError extends Error {
     this.name = "SessionJoinRejectedError";
   }
 }
+
+export class SessionReconnectRejectedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "SessionReconnectRejectedError";
+  }
+}

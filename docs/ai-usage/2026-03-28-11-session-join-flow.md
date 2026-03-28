@@ -1,6 +1,6 @@
 # 2026-03-28-11-session-join-flow.md
 
-## AI Usage Log
+## AI Usage Log: Session Join Flow
 
 ## Date
 
@@ -10,7 +10,19 @@
 
 2026-03-28T18:15:00+07:00
 
-## Scope Of Work
+## Related Context
+
+- Branch: `feat/session-join-flow`
+- Related commit: `8c24d20`
+
+## User Input And Decisions
+
+- asked for a quick rundown of the relevant tests before deciding whether the join slice was ready
+- stressed that code changes should stay small and must have clear tests
+- requested that the small-change plus clear-test expectation be added to the repository rules
+- asked for the work to be packaged as a PR once the slice stayed within the right size
+
+## Task Summary
 
 Implemented the first real participation slice by wiring `session.join` through the session service and transport layer, binding successful joins to the connection context, adding guard-rail tests for join success and rejection behavior, and tightening the contributor rules so small code slices must carry clear tests.
 
@@ -18,14 +30,16 @@ Implemented the first real participation slice by wiring `session.join` through 
 
 - Codex
 
-## Prompts Or Interaction Style
+## Interaction Summary
 
-- direct continuation from the merged foundation scaffold into the first usable participation flow
-- explicit instruction to keep the work interface-first and test-backed
-- follow-up instruction to make the small-change plus clear-test expectation explicit in the repo rules
-- short iterative review of the code and module docs before locking the join result shape
+AI was used to:
 
-## Artifacts Produced With AI Assistance
+- continue from the merged foundation scaffold into the first usable participation flow
+- review the code and module docs together before locking the join result shape
+- implement the join path through the session and transport layers
+- add focused tests and align the governance docs with the small-change plus clear-test expectation
+
+## Outputs Influenced By AI
 
 - updated `src/session/contracts.ts`
 - updated `src/session/stub-quiz-session-service.ts`
@@ -47,7 +61,13 @@ Implemented the first real participation slice by wiring `session.join` through 
 - refined the first patch after typecheck flagged an unsupported `toSorted` call under the current compiler target
 - kept the transport layer thin by mapping session-service results into envelopes instead of embedding session mutation logic in the handler
 
-## Unresolved Concerns Or Follow-Ups
+## Human Judgment Applied
+
+- Chose to make join the first real participation slice before reconnect or disconnect handling.
+- Chose to expand the session result contract so join could return participant binding data as well as the current snapshot.
+- Chose to stop the slice after join once the tests and PR size looked clean.
+
+## Follow-Up
 
 - `session.reconnect` is still unimplemented
 - disconnect forwarding is still a placeholder

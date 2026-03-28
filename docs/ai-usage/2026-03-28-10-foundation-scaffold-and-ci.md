@@ -1,6 +1,6 @@
 # 2026-03-28-10-foundation-scaffold-and-ci.md
 
-## AI Usage Log
+## AI Usage Log: Foundation Scaffold And CI
 
 ## Date
 
@@ -10,7 +10,19 @@
 
 2026-03-28T16:45:00+07:00
 
-## Scope Of Work
+## Related Context
+
+- Branch: `feat/foundation-scaffold-and-ci`
+- Related commit: `4ee3556`
+
+## User Input And Decisions
+
+- requested a lightweight GitHub-hosted CI path immediately after stack selection
+- requested Node.js setup guidance in `CONTRIBUTING.md`, including what to install and which version to use
+- requested a shared onboarding script that both AI assistants and human contributors could run
+- emphasized keeping the design and scaffolding language-agnostic where practical until stack selection was explicitly done
+
+## Task Summary
 
 Added the stage-3 foundation scaffold: Node.js and TypeScript project files, lightweight GitHub-hosted CI, the initial Fastify plus WebSocket app shell, interface-first contracts, mocked or in-memory adapters, onboarding script, and the first guard-rail tests.
 
@@ -18,13 +30,16 @@ Added the stage-3 foundation scaffold: Node.js and TypeScript project files, lig
 
 - Codex
 
-## Prompts Or Interaction Style
+## Interaction Summary
 
-- direct continuation from the merged stack-selection checkpoint into practical scaffold implementation
-- explicit requirement to keep CI lightweight, GitHub-hosted, and to make onboarding usable by both humans and AI agents
-- follow-up refinement to keep the implementation guidance interface-first and unit-test-first
+AI was used to:
 
-## Artifacts Produced With AI Assistance
+- continue from the merged stack-selection checkpoint into practical scaffold implementation
+- translate the selected stack into concrete project files, scripts, and directory structure
+- add a lightweight CI workflow and a shared bootstrap path for both AI and human contributors
+- align the contributor guidance and stage-tracking docs with the implemented scaffold
+
+## Outputs Influenced By AI
 
 - `package.json`
 - `package-lock.json`
@@ -49,7 +64,13 @@ Added the stage-3 foundation scaffold: Node.js and TypeScript project files, lig
 - refined imports so interface types come from contract modules instead of stub implementations
 - added a controlled local bootstrap override so contributors without Node.js `24.x` can do temporary local checks while CI stays authoritative
 
-## Unresolved Concerns Or Follow-Ups
+## Human Judgment Applied
+
+- Chose to keep the foundation scaffold thin and interface-first rather than implementing deeper participation behavior in the same slice.
+- Chose GitHub-hosted CI as the initial merge gate instead of adding more elaborate automation early.
+- Chose to allow a local-only bootstrap override for temporary checks while keeping CI authoritative on the documented Node version.
+
+## Follow-Up
 
 - `session.join`, `session.reconnect`, and scoring behavior are still stubbed
 - successful transport acknowledgements and bound-connection state updates still need implementation

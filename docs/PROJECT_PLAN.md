@@ -70,9 +70,9 @@ Within layer 2, the implementation sequence should be:
 | 1. Refine design boundary and execution plan | Completed | Solution scope, execution sequence, and design workflow are now explicit. |
 | 2. Define architecture and module contracts | Completed | Architecture baseline, stable first-pass module contracts, and the open-question review are complete. No remaining architecture blocker currently prevents stack selection. |
 | 3. Select stack, add CI, and scaffold interfaces | Completed | The selected stack, lightweight CI, onboarding script, source tree, interface seams, in-memory or mocked adapters, and initial guard-rail tests are now in place. |
-| 4. Add guard-rail tests and participation skeleton | In progress | The join and connection-binding slice is now in place. Next deepen reconnect, disconnect, and answer-submission behavior behind the same interfaces. |
+| 4. Add guard-rail tests and participation skeleton | In progress | The join and reconnect slices are now in place. Next deepen disconnect and answer-submission behavior behind the same interfaces. |
 | 5. Implement scoring and leaderboard flow | Pending | Deepen the stubbed scoring, ranking, and live update paths without breaking the established interfaces or guard-rail tests. |
-| 6. Strengthen tests, demo flow, and observability hooks | Pending | Expand tests, improve the local multi-client demo path, and add logging plus developer run instructions. |
+| 6. Strengthen tests, demo flow, and observability hooks | Pending | Expand tests, add an automated headless multi-player and multi-session integration scenario, improve the local multi-client demo path, and add logging plus developer run instructions. |
 | 7. Finalize submission package | Pending | Final docs, AI collaboration summary, architecture diagram, and video preparation notes. |
 
 ## Stage Exit Criteria
@@ -106,6 +106,7 @@ Within layer 2, the implementation sequence should be:
 - skeletal tests exist before deep implementation and continue to evolve with the modules
 - the real-time participation, scoring, and leaderboard flows are implemented
 - behavior is covered by targeted tests or explicit verification
+- an automated headless integration test exercises multiple players across concurrent sessions without requiring a full frontend
 - the local demo path is reliable enough for walkthrough use
 
 ### Stage 7 exit criteria
@@ -121,23 +122,23 @@ Current stage: `4. Add guard-rail tests and participation skeleton`
 
 Immediate next outputs:
 
-- implement `session.reconnect` behind the scaffolded interfaces
 - forward disconnect handling safely through the session boundary
-- expand tests around reconnect success, invalid reconnect rejection, and disconnect behavior
+- expand tests around disconnect behavior before wiring connection-close handling
+- start the first accepted `answer.submit` path behind the existing seams
 - keep the transport adapter thin while session behavior starts to deepen
 - keep `docs/IMPLEMENTATION_STATUS.md` aligned with the current implementation stage
 
 ## Current Next Steps
 
-1. Implement `session.reconnect` behind the existing session and store interfaces.
-2. Map reconnect outcomes to success or rejection events without thickening the transport layer.
-3. Forward disconnect handling and make stale disconnects safe.
-4. Add transport and session tests around reconnect and disconnect flows.
-5. Start the first accepted `answer.submit` path behind the established seams.
+1. Forward disconnect handling and make stale disconnects safe.
+2. Add transport and session tests around disconnect behavior.
+3. Start the first accepted `answer.submit` path behind the established seams.
+4. Map scoring outcomes into transport events without thickening the transport layer.
+5. Add the first leaderboard-update assertions once answer acceptance exists.
 
 ## Resume Point
 
-The next session should resume just after the first working join slice behind the stage-3 scaffold.
+The next session should resume just after the first working join and reconnect slices behind the stage-3 scaffold.
 
 Read in this order:
 
@@ -154,10 +155,10 @@ Read in this order:
 
 Resume with these implementation decisions first:
 
-- implement `session.reconnect`
 - define stale-disconnect-safe connection release behavior
-- expand the guard-rail test set around reconnect and disconnect handling
-- keep the current join payload shape stable unless there is a strong reason to change it
+- expand the guard-rail test set around disconnect handling
+- start the first accepted `answer.submit` path
+- keep the current join and reconnect payload shape stable unless there is a strong reason to change it
 
 After the first full pass through the design docs:
 

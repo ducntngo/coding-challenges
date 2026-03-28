@@ -2,7 +2,10 @@ import { randomUUID } from "node:crypto";
 
 import type { QuizDefinitionSource } from "../quiz-source/contracts";
 import type { SessionStore } from "../store/contracts";
-import { SessionJoinRejectedError } from "./contracts";
+import {
+  SessionJoinRejectedError,
+  SessionReconnectRejectedError,
+} from "./contracts";
 import type {
   DisconnectParticipantInput,
   JoinSessionInput,
@@ -83,11 +86,64 @@ export class StubQuizSessionService implements QuizSessionService {
   }
 
   async reconnectParticipant(
-    _input: ReconnectParticipantInput,
+    input: ReconnectParticipantInput,
   ): Promise<SessionBindingResult> {
-    throw new Error(
-      "reconnectParticipant is not implemented in the foundation scaffold.",
+    const quiz = await this.quizDefinitionSource.getQuizDefinition(input.quizId);
+
+    if (!quiz) {
+      throw new SessionReconnectRejectedError(
+        `Quiz ${input.quizId} could not be resolved.`,
+      );
+    }
+
+    const existingSession = await this.sessionStore.getActiveSession(input.quizId);
+
+    if (!existingSession) {
+      throw new SessionReconnectRejectedError(
+        `Quiz ${input.quizId} has no active session.`,
+      );
+    }
+
+    const participantRecord = existingSession.participantRecords.find(
+      (candidate) => candidate.reconnectToken === input.reconnectToken,
     );
+
+    if (!participantRecord) {
+      throw new SessionReconnectRejectedError(
+        "Reconnect token is invalid for this session.",
+      );
+    }
+
+    const nextParticipantRecords = existingSession.participantRecords.map(
+      (candidate) =>
+        candidate.participantId === participantRecord.participantId
+          ? {
+              ...candidate,
+              state: "active" as const,
+              connectionId: input.connectionId,
+            }
+          : candidate,
+    );
+
+    const nextSession = buildSessionAggregate({
+      existingSession,
+      participantRecords: nextParticipantRecords,
+      quizId: input.quizId,
+      sessionInstanceId: existingSession.snapshot.sessionInstanceId,
+    });
+
+    await this.sessionStore.saveSession(nextSession);
+
+    return {
+      snapshot: nextSession.snapshot,
+      self: {
+        participantId: participantRecord.participantId,
+        displayName: participantRecord.displayName,
+        state: "active",
+        score: participantRecord.score,
+        reconnectToken: participantRecord.reconnectToken,
+      },
+    };
   }
 
   async disconnectParticipant(

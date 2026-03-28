@@ -20,7 +20,7 @@ This file defines how AI assistants should work in this repository. It is the pr
 - Prefer one pull request per coherent slice of work.
 - Use descriptive branch names with a type prefix such as `feat/`, `fix/`, `chore/`, or `docs/`.
 - Pull requests should be squash-merged so each PR becomes one commit on `main`.
-- While a PR is in progress, prefer amending the existing branch commit instead of stacking many commits.
+- Keep each PR branch as one evolving commit. While a PR is in progress, amend or re-squash the branch instead of stacking many commits.
 - Keep branches short-lived and rebased or refreshed as needed to stay close to trunk.
 - Every pull request must include at least one AI usage diary entry under `docs/ai-usage/`.
 - Use a short type tag in commit subjects such as `[feat]`, `[fix]`, `[chore]`, or `[docs]`.
@@ -59,6 +59,7 @@ This file defines how AI assistants should work in this repository. It is the pr
 - Create or update one markdown log entry for each meaningful commit or tightly related commit group.
 - Ensure each pull request has diary coverage that explains the AI-assisted work included in that PR.
 - Each entry should summarize:
+  - user input, questions, concerns, and decisions that materially shaped the work
   - scope of work
   - AI tools used
   - prompts or interaction style
