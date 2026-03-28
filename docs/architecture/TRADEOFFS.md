@@ -148,6 +148,7 @@ All session and participant state access goes through a clear interface. The fir
 - reduces implementation complexity for the challenge
 - keeps the domain model decoupled from storage details
 - supports a migration path to a scalable shared or durable store later
+- avoids spending the challenge implementation budget on Redis, Kubernetes, ingress, and database setup before the core session logic is verified
 
 ### Cost
 
@@ -219,6 +220,29 @@ Use a WebSocket transport with explicit JSON envelopes, integrated into the serv
 - requires more manual message handling and mapping
 - leaves convenience features such as automatic client retry semantics out of scope for the first implementation
 
+## Tradeoff 11: Database Serialization Vs Explicit Session Routing
+
+### Choice
+
+Let every application node update shared session state directly through the database, or route each live session to one logical owner and keep the database out of the hottest concurrency path.
+
+### Chosen Direction
+
+For larger multi-instance scale, prefer explicit session ownership and routing over using the database as the primary serialization mechanism.
+
+### Why
+
+- keeps row-lock contention away from the hottest realtime path
+- preserves more predictable latency for accepted answers and leaderboard updates
+- fits naturally with per-session fanout and reconnect ownership
+
+### Cost
+
+- requires session-owner discovery and lease management
+- adds internal forwarding between gateway and session-owner nodes
+- still leaves the exact hotspot-game strategy as a higher-scale follow-up
+
 ## Open Tradeoffs
 
 - exact scoring formula for correct answers `[needs verification]`
+- exact megasession strategy for one extraordinarily large hotspot quiz `[needs verification]`

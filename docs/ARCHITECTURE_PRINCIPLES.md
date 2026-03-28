@@ -167,6 +167,8 @@ The current implementation stack direction for the challenge build is:
 
 These are challenge-sized implementation choices. In a real deployment, the process-local state would usually move to a proper shared or durable database, mocked quiz-definition access would be replaced by a real content store or service, real-time fanout would add cross-instance coordination, and operational plus analytical signals would be sent to dedicated observability and warehouse tooling.
 
+This was also a deliberate scope-control decision. The challenge implementation avoids standing up Redis, Kubernetes, ingress or NGINX, and database infrastructure before the core session behavior is proven, while still keeping the code shaped around replacement seams for those future pieces.
+
 ## Core Runtime Rules
 
 ### Identity and reconnect

@@ -30,6 +30,7 @@ Establish the initial runnable backend foundation for the real-time quiz service
 - `@fastify/websocket` keeps the real-time transport explicit while still fitting naturally into the Fastify app shell.
 - `node:test` keeps the initial guard-rail test setup low-dependency and close to the runtime.
 - GitHub Actions is the simplest CI baseline for this repository and is enough for install, typecheck, and unit-test checks.
+- The in-memory state baseline avoids spending the challenge implementation budget on Redis, Kubernetes, ingress, NGINX, and database setup before the core realtime behavior is working and testable.
 
 ## Baseline In Repository
 

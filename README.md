@@ -1,21 +1,62 @@
 # README.md
 
-## Real-Time Quiz Submission
+## Real-Time Vocabulary Quiz Coding Challenge
 
-This repository contains a submission-ready backend implementation for the Real-Time Vocabulary Quiz coding challenge. The implemented component is a Fastify plus WebSocket real-time quiz session service that supports:
+## Overview
 
-- join by `quizId`
+This repository is a submission for the Real-Time Quiz coding challenge. The implemented component is a backend real-time quiz session service for an English learning application. It focuses on the core runtime behavior needed for:
+
+- joining a quiz by `quizId`
 - real-time answer submission
 - real-time score updates
-- real-time leaderboard fanout
-- reconnect handling
-- deterministic scoring and progression behavior
+- real-time leaderboard updates
+
+The rest of the product surface is intentionally mocked or discussed only in design docs.
+
+## Acceptance Criteria
+
+1. **User Participation**:
+   - Users should be able to join a quiz session using a unique quiz ID.
+   - The system should support multiple users joining the same quiz session simultaneously.
+
+2. **Real-Time Score Updates**:
+   - As users submit answers, their scores should be updated in real-time.
+   - The scoring system must be accurate and consistent.
+
+3. **Real-Time Leaderboard**:
+   - A leaderboard should display the current standings of all participants.
+   - The leaderboard should update promptly as scores change.
+
+## Challenge Requirements
+
+The challenge asks for:
+
+- a system design with architecture, components, data flow, and technology choices
+- one implemented real-time core component
+- explicit documentation of AI collaboration in design and implementation
+- discussion of scalability, performance, reliability, maintainability, and observability
+
+This repository answers that with:
+
+- the implemented backend real-time quiz service in `src/`
+- design and architecture docs in `docs/`
+- a reviewer-facing submission bundle in `submission/`
+- unit, integration, and simulation-based verification paths
+
+## Reviewer Addendum
 
 If you only review one area first, start with [submission/README.md](submission/README.md).
 
-## Quick Start
+Submission entrypoints:
 
-Use `nvm` only to select Node. Use `npm` to run repository scripts.
+- [submission/README.md](submission/README.md)
+  - reviewer checklist and navigation
+- [submission/SYSTEM_DESIGN.md](submission/SYSTEM_DESIGN.md)
+  - concise design summary, runtime flow, and scale discussion
+- [submission/AI_COLLABORATION.md](submission/AI_COLLABORATION.md)
+  - condensed AI collaboration summary with links to the detailed diary
+
+Quick reviewer path:
 
 1. `nvm install`
 2. `nvm use`
@@ -25,56 +66,13 @@ Use `nvm` only to select Node. Use `npm` to run repository scripts.
 6. `npm run simulate:game`
 7. `npm run test:integration`
 
-Do not use `nvm run bootstrap`; that asks Node to execute a file named `bootstrap` instead of the package script.
-
-Full reviewer guidance is in [06-demo-flow.md](docs/implementation/06-demo-flow.md).
-
-`npm run simulate:game` connects to the running local server over `/ws`, joins several players into `demo-quiz`, submits one answer, and verifies each player's observed score plus leaderboard events from the outside.
-
-For a broader local-only run, `npm run simulate:random-game` boots its own temporary app instance, picks 2 to 5 players, uses simulated question timing across 3 rounds with random answers, keeps the leaderboard printed throughout, and shows one random participant's point of view.
-
-Verification paths:
+Verification options:
 
 - `npm run simulate:game`
-  - requires a running `npm run dev` server and is the best black-box runtime check
+  - quickest black-box check against a running local server
 - `npm run simulate:random-game`
-  - starts its own temporary app instance and gives a more human-readable terminal game narrative
+  - local-only multi-round terminal narrative with leaderboard output throughout
 - `npm run test:integration`
-  - remains the authoritative deterministic end-to-end coverage path
+  - deterministic end-to-end verification path
 
-If Node.js `24.x` is temporarily unavailable for a local-only check, you may bypass the version gate once with `SKIP_NODE_VERSION_CHECK=1 npm run bootstrap`. CI and merge readiness still depend on Node.js `24.x`.
-
-## Submission Bundle
-
-The submission-focused entrypoints are grouped under `submission/`:
-
-- [submission/README.md](submission/README.md)
-  - reviewer checklist and navigation
-- [submission/SYSTEM_DESIGN.md](submission/SYSTEM_DESIGN.md)
-  - concise system design summary with diagram, data flow, stack choices, and tradeoffs
-- [submission/AI_COLLABORATION.md](submission/AI_COLLABORATION.md)
-  - AI collaboration summary, verification approach, and links to the detailed diary entries
-
-## Repository Map
-
-- `src/`
-  - implementation of the real-time quiz service
-- `test/`
-  - unit and headless integration coverage
-- [docs/ARCHITECTURE_PRINCIPLES.md](docs/ARCHITECTURE_PRINCIPLES.md)
-  - stable architecture baseline
-- [docs/architecture/TRADEOFFS.md](docs/architecture/TRADEOFFS.md)
-  - explicit architecture tradeoffs
-- [docs/modules/](docs/modules/)
-  - stable module contracts
-- [docs/implementation/](docs/implementation/)
-  - implementation-phase docs, run flow, and harness walkthrough
-- [docs/ai-usage/](docs/ai-usage/)
-  - detailed commit-oriented AI usage diary
-
-## Reviewer Path
-
-1. Read [submission/README.md](submission/README.md).
-2. Read [submission/SYSTEM_DESIGN.md](submission/SYSTEM_DESIGN.md).
-3. Run the commands in the Quick Start section.
-4. Use [submission/AI_COLLABORATION.md](submission/AI_COLLABORATION.md) and [docs/ai-usage/](docs/ai-usage/) if you want the detailed AI trail.
+Full reviewer guidance is in [docs/implementation/06-demo-flow.md](docs/implementation/06-demo-flow.md).
