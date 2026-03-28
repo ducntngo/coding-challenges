@@ -4,6 +4,16 @@ const demoQuiz: QuizDefinition = {
   quizId: "demo-quiz",
   title: "Demo Vocabulary Quiz",
   questionIds: ["question-1", "question-2"],
+  questions: [
+    {
+      questionId: "question-1",
+      acceptedAnswer: "correct",
+    },
+    {
+      questionId: "question-2",
+      acceptedAnswer: "correct",
+    },
+  ],
 };
 
 export class MockQuizDefinitionSource implements QuizDefinitionSource {

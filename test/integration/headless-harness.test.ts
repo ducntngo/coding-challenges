@@ -816,11 +816,31 @@ function buildIntegrationDependencies(): AppDependencies {
       quizId: "demo-quiz",
       title: "Demo Vocabulary Quiz",
       questionIds: ["question-1", "question-2"],
+      questions: [
+        {
+          questionId: "question-1",
+          acceptedAnswer: "correct",
+        },
+        {
+          questionId: "question-2",
+          acceptedAnswer: "correct",
+        },
+      ],
     },
     {
       quizId: "science-quiz",
       title: "Science Quiz",
       questionIds: ["question-1", "question-2"],
+      questions: [
+        {
+          questionId: "question-1",
+          acceptedAnswer: "correct",
+        },
+        {
+          questionId: "question-2",
+          acceptedAnswer: "correct",
+        },
+      ],
     },
   ]);
   const sessionStore = new InMemorySessionStore();

@@ -34,6 +34,17 @@ export class StubAnswerSubmissionService implements AnswerSubmissionService {
       };
     }
 
+    const questionDefinition = quizDefinition.questions.find(
+      (candidate) => candidate.questionId === input.questionId,
+    );
+
+    if (!questionDefinition) {
+      return {
+        accepted: false,
+        reason: `Question ${input.questionId} could not be resolved for quiz ${input.quizId}.`,
+      };
+    }
+
     const existingSession = await this.sessionStore.getActiveSession(input.quizId);
 
     if (!existingSession) {
@@ -87,6 +98,7 @@ export class StubAnswerSubmissionService implements AnswerSubmissionService {
       quizId: input.quizId,
       questionId: input.questionId,
       answer: input.answer,
+      acceptedAnswer: questionDefinition.acceptedAnswer,
       currentScore: participantRecord.score,
     });
 

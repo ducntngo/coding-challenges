@@ -2,8 +2,9 @@ import type { AnswerSubmission, ScoringResult, ScoringService } from "./contract
 
 export class StubScoringService implements ScoringService {
   async scoreSubmission(input: AnswerSubmission): Promise<ScoringResult> {
-    const normalizedAnswer = input.answer.trim().toLowerCase();
-    const scoreDelta = normalizedAnswer === "correct" ? 100 : 0;
+    const normalizedAnswer = normalizeAnswer(input.answer);
+    const normalizedAcceptedAnswer = normalizeAnswer(input.acceptedAnswer);
+    const scoreDelta = normalizedAnswer === normalizedAcceptedAnswer ? 100 : 0;
 
     return {
       accepted: true,
@@ -14,3 +15,7 @@ export class StubScoringService implements ScoringService {
 }
 
 export type { ScoringService } from "./contracts";
+
+function normalizeAnswer(answer: string): string {
+  return answer.trim().toLowerCase();
+}
