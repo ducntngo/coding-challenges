@@ -69,7 +69,7 @@ Within layer 2, the implementation sequence should be:
 | 0. Documentation and workflow setup | Completed | Governance docs, planning scaffold, AI diary rules, and repo workflow rules are in place. |
 | 1. Refine design boundary and execution plan | Completed | Solution scope, execution sequence, and design workflow are now explicit. |
 | 2. Define architecture and module contracts | Completed | Architecture baseline, stable first-pass module contracts, and the open-question review are complete. No remaining architecture blocker currently prevents stack selection. |
-| 3. Select stack, add CI, and scaffold interfaces | In progress | Choose runtime, language, framework, and transport, add a simple CI pipeline for the chosen stack, then scaffold all planned interfaces, mocks, and placeholder integrations. |
+| 3. Select stack, add CI, and scaffold interfaces | In progress | The implementation stack is now selected. Next add a simple CI pipeline, then scaffold all planned interfaces, mocks, and placeholder integrations. |
 | 4. Add guard-rail tests and participation skeleton | Pending | Add bare-bones tests around the scaffolded seams and implement the first usable participation flow behind the existing interfaces. |
 | 5. Implement scoring and leaderboard flow | Pending | Deepen the stubbed scoring, ranking, and live update paths without breaking the established interfaces or guard-rail tests. |
 | 6. Strengthen tests, demo flow, and observability hooks | Pending | Expand tests, improve the local multi-client demo path, and add logging plus developer run instructions. |
@@ -121,7 +121,6 @@ Current stage: `3. Select stack, add CI, and scaffold interfaces`
 
 Immediate next outputs:
 
-- choose the implementation stack
 - add a simple CI pipeline immediately after stack selection
 - settle the small set of remaining interface-shape items that affect scaffolding
 - scaffold interfaces, mocks, and placeholder integrations
@@ -130,44 +129,43 @@ Immediate next outputs:
 
 ## Current Next Steps
 
-1. Choose the stack.
-2. Add a simple CI pipeline for the chosen stack.
-3. Settle the remaining interface-shape items that affect scaffolding.
-4. Scaffold all planned interfaces, mocks, and placeholder integrations before deep module implementation.
-5. Add skeletal tests around those seams before fleshing out the detailed implementations.
-6. Start the first usable participation slice behind the scaffolded interfaces.
+1. Add a simple CI pipeline for the chosen stack.
+2. Settle the remaining interface-shape items that affect scaffolding.
+3. Scaffold all planned interfaces, mocks, and placeholder integrations before deep module implementation.
+4. Add skeletal tests around those seams before fleshing out the detailed implementations.
+5. Start the first usable participation slice behind the scaffolded interfaces.
 
 ## Resume Point
 
-The next session should resume with stack selection, CI setup, and interface scaffolding prep.
+The next session should resume with CI setup and interface scaffolding prep for the selected stack.
 
 Read in this order:
 
 1. `docs/PROJECT_PLAN.md`
 2. `docs/IMPLEMENTATION_STATUS.md`
 3. `docs/ARCHITECTURE_PRINCIPLES.md`
-4. `docs/architecture/logs/2026-03-28-02-open-question-review.md`
-5. `docs/modules/MODULE_DESIGN_PLAN.md`
-6. `docs/modules/quiz-session.md`
-7. `docs/modules/realtime-transport.md`
-8. `docs/modules/scoring-and-leaderboard.md`
-9. `docs/modules/observability-and-operations.md`
+4. `docs/architecture/logs/2026-03-28-03-stack-selection.md`
+5. `docs/architecture/logs/2026-03-28-02-open-question-review.md`
+6. `docs/modules/MODULE_DESIGN_PLAN.md`
+7. `docs/modules/quiz-session.md`
+8. `docs/modules/realtime-transport.md`
+9. `docs/modules/scoring-and-leaderboard.md`
+10. `docs/modules/observability-and-operations.md`
 
 Resume with these implementation decisions first:
 
-- choose the runtime, transport approach, and project structure
-- add a simple CI pipeline once the stack is chosen
+- add a simple CI pipeline for the selected stack
 - settle the payload-shape and health-surface details that affect the scaffold
 - define the first interface set and placeholder integrations
 - define the first skeletal test set
 
 After the first full pass through the design docs:
 
-- revisit tagged open questions across architecture and module docs
-- decide which questions must be resolved before stack selection
+- keep the open-question review outcome in view during scaffolding
+- resolve only the tagged items that affect CI, interface seams, or early implementation
 - leave only intentional deferred items open
 
-After stack selection:
+With the stack selected:
 
 - add a simple CI pipeline for the chosen stack
 - scaffold all core module interfaces before deep implementation
@@ -197,9 +195,8 @@ The following docs should be updated throughout the project, not only at the end
 
 The following should not be optimized yet:
 
-- exact language choice
-- exact framework choice
-- exact transport library choice
+- exact dependency version pinning beyond what the scaffold needs
+- richer formatting or linting setup than the first CI pass needs
 - full project directory structure
 - advanced production features beyond what the design discussion requires
 
@@ -208,3 +205,4 @@ The following should not be optimized yet:
 - Initial implementation target: backend real-time quiz server
 - Documentation-first workflow chosen to support both implementation and final submission
 - Stack selection intentionally deferred until after architecture and module-contract refinement
+- Selected implementation stack: Node.js LTS, TypeScript, Fastify, `@fastify/websocket`, `node:test`, and GitHub Actions
